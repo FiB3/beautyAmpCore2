@@ -1,0 +1,12 @@
+node_modules
+.vscode-te
+
+jsconfig.json
+.eslintrc.json
+
+.vscode/settings.json
+
+*.amp
+*.txt
+
+.DS_Store
