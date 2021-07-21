@@ -10,3 +10,5 @@ jsconfig.json
 *.txt
 
 .DS_Store
+
+coverage

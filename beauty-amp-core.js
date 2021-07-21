@@ -88,18 +88,33 @@ module.exports = {
    * @param {Array} lines text of your code as an Array.
    * @return {Array} Array of lines.
    */
-  beautify(lines) {
+  beautify(lines, setup, editorSetup) {
+    if (!setup) {
+      setup = {
+        capitalizeAndOrNot:true,
+        capitalizeIfFor:true,
+        capitalizeSet:true,
+        capitalizeVar:true,
+      };
+    }
+    if (!editorSetup) {
+      editorSetup = {
+        insertSpaces: true,
+        tabSize: 4
+      }
+    };
+
     // Cut blanks lines from start and end:
     console.log("getCodeBlocks");
-    lines = cutBlanksAtStartEnd(lines);
+    lines = this.cutBlanksAtStartEnd(lines);
     // get code blocks:
-    console.log("getCodeBlocks");
-    const blocks = getCodeBlocks(lines, undefined, setup, editorSetup);
+    console.log("getCodeBlocks"); 
+    const blocks = this.getCodeBlocks(lines, undefined, setup, editorSetup);
     // process nesting of the blocks:
     console.log("processNesting");
-    processNesting(blocks);
+    this.processNesting(blocks);
     console.log("returnAsLines");
-    const newLines = returnAsLines(blocks);
+    const newLines = this.returnAsLines(blocks);
 
     // TODO: change me:
     return newLines.join("\n");

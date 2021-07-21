@@ -1,14 +1,22 @@
 {
   "name": "beauty-amp-core",
   "version": "0.3.3",
-	"description": "Beautify (prettify) AMPscript for Marketing Cloud - prettifying library only.",
-	"publisher": "FiB",
-	"author": {
-		"name": "filipbostik"
-	},
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "description": "Beautify (prettify) AMPscript for Marketing Cloud - prettifying library only.",
+  "publisher": "FiB",
+  "author": {
+    "name": "filipbostik"
   },
-  "keywords": []
+  "main": "beauty-amp-core.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^27.0.6"
+  },
+  "jest": {
+    "verbose": true,
+    "collectCoverage": false
+  }
 }
