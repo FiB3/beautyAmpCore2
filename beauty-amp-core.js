@@ -105,6 +105,7 @@ module.exports = {
         capitalizeIfFor:true,
         capitalizeSet:true,
         capitalizeVar:true,
+        maxParametersPerLine: 4
       };
     }
     if (!editorSetup) {

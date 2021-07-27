@@ -10,7 +10,7 @@ beforeEach(() => {
 
 test("NEXT in string test", () => {
 
-  const testCase = `<h1>broken by the "next"</h1>
+  let testCase = `<h1>broken by the "next"</h1>
 %%[VAR @FullCtaUrl 
 If ( @CtaCode == "Whatsnext" or @CtaCode=="Rprhist_AS") then 
     If @emailId==1 Then
@@ -21,9 +21,9 @@ If ( @CtaCode == "Whatsnext" or @CtaCode=="Rprhist_AS") then
 Else
 	Set @FullCtaUrl = @CtaUrl
 endif
-]%%`.split('\n');
+]%%`;
 
-    const testRes = `<h1>broken by the "next"</h1>
+  const testRes = `<h1>broken by the "next"</h1>
 %%[
     VAR @FullCtaUrl
     IF ( @CtaCode == "Whatsnext" OR @CtaCode=="Rprhist_AS") THEN
@@ -37,6 +37,48 @@ endif
     ENDIF
 ]%%
 `;
+
+  testCase = testCase.split('\n');
+
+  const res = beautifier.beautify(testCase);
+  expect(res).toBe(testRes);
+});
+
+test("IIF with nested function & multi-line comment", () => {
+  let testCase = `
+    %%[
+        /*
+            * example on how to use this
+            * example on how to use this
+        */
+    ]%%
+    
+    %%[
+        SET @Title = IIF(EMPTY(@Title) OR @Title=="\'Without title" OR @Title==Concat('<a href="mailto: ', @rawStoreEmail, '">', @rawStoreEmail, '</a>'    ) OR @Title==EMPTY(@Title), '', Concat(' ', @Title))
+    ]%%
+`;
+
+  const testRes = `
+%%[
+    /*
+    * example on how to use this
+    * example on how to use this
+    */
+]%%
+
+%%[
+    SET @Title = IIF(EMPTY(@Title) OR @Title=="\'Without title" OR @Title==Concat(
+        '<a href="mailto: ',
+        @rawStoreEmail,
+        '">',
+        @rawStoreEmail,
+        '</a>'
+    ) OR @Title==EMPTY(@Title), '', Concat(' ', @Title))
+]%%
+`;
+
+
+  testCase = testCase.split('\n');
 
   const res = beautifier.beautify(testCase);
   expect(res).toBe(testRes);
