@@ -5,7 +5,7 @@ This library gives you the option to format AMPscript code used in SFMC.
 ## Installation
 
 ```
-> npm install readme -g
+> npm install --save beauty-amp-core
 ```
 
 ## Usage
