@@ -3,13 +3,21 @@ const formatters = require('./src/formatters');
 
 const Logger = require("./src/logger");
 
-const beautifierSetup = {
-
+let setup = {
+  ampscript: {
+    capitalizeAndOrNot:true,
+    capitalizeIfFor:true,
+    capitalizeSet:true,
+    capitalizeVar:true,
+    maxParametersPerLine: 4
+  },
+  editor: {
+    insertSpaces: true,
+    tabSize: 4
+  }
 };
-const editorSetup = {
 
-};
-const logger = new Logger();
+let logger = new Logger();
 
 module.exports = {
 
@@ -96,31 +104,15 @@ module.exports = {
   /**
    * Format code.
    * @param {Array} lines text of your code as an Array.
-   * @return {Array} Array of lines.
+   * @return {String} Code as string. [subject to future change]
    */
-  beautify(lines, setup, editorSetup) {
-    if (!setup) {
-      setup = {
-        capitalizeAndOrNot:true,
-        capitalizeIfFor:true,
-        capitalizeSet:true,
-        capitalizeVar:true,
-        maxParametersPerLine: 4
-      };
-    }
-    if (!editorSetup) {
-      editorSetup = {
-        insertSpaces: true,
-        tabSize: 4
-      }
-    };
-
+  beautify(lines) {
     // Cut blanks lines from start and end:
     logger.log("getCodeBlocks");
     lines = this.cutBlanksAtStartEnd(lines);
     // get code blocks:
     logger.log("getCodeBlocks"); 
-    const blocks = this.getCodeBlocks(lines, undefined, setup, editorSetup);
+    const blocks = this.getCodeBlocks(lines, undefined, setup.ampscript, setup.editor);
     // process nesting of the blocks:
     logger.log("processNesting");
     this.processNesting(blocks);
@@ -133,14 +125,27 @@ module.exports = {
 
   /**
    * Setup the logger.
-   * @param {Object} beautifier
-   * @param {Object} editor
+   * @param {Object} ampscript - currently unsupported
+   * @param {Object} editor - currently unsupported
    * @param {Object} logs
    *    {string|Number} logLevel - Log level
    *    {Boolean = true} loggerOn - enable the logger
    */
-  setup(beautifier, editor, logs) {
-    
+  setup(ampscript, editor, logs) {
+    // default:
+    // setup.ampscript = {
+    //   capitalizeAndOrNot:true,
+    //   capitalizeIfFor:true,
+    //   capitalizeSet:true,
+    //   capitalizeVar:true,
+    //   maxParametersPerLine: 4
+    // };
+
+    // // default:
+    // setup.editor = {
+    //   insertSpaces: true,
+    //   tabSize: 4
+    // };
 
     logger.setup(logs);
   }
