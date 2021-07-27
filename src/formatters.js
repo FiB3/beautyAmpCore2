@@ -7,7 +7,7 @@ module.exports = {
    * @param {String} text function parameters without the opening/closing parenthesis
    */
   splitParameters: function (text) {
-    console.log(text);
+    // console.log(text);
     let delimeter = ',';
     let splitted = [];
 
@@ -99,7 +99,7 @@ module.exports = {
     let parameters = methodStr.substring(parenthesisStart, parenthesisEnd);
     let methodStart = methodStr.substring(0, parenthesisStart);
 
-    console.log(`${parenthesisStart}:${parenthesisEnd}: ${[methodStart, parameters, methodEnd].join('_|_')}`);
+    // console.log(`${parenthesisStart}:${parenthesisEnd}: ${[methodStart, parameters, methodEnd].join('_|_')}`);
     return [methodStart, parameters, methodEnd];
   }
 }

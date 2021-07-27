@@ -1,6 +1,16 @@
 const _ = require('lodash');
 const formatters = require('./src/formatters');
 
+const Logger = require("./src/logger");
+
+const beautifierSetup = {
+
+};
+const editorSetup = {
+
+};
+const logger = new Logger();
+
 module.exports = {
 
   cutBlanksAtStartEnd(lines, lineDelimeter) {
@@ -22,11 +32,11 @@ module.exports = {
 
     // get matches as code blocks:
     let ampBlocks = fullText.match(blockRegEx);
-    // console.log('AMP blocks: ', ampBlocks);
+    // logger.log('AMP blocks: ', ampBlocks);
 
     // split by block regex:
     let htmlBlocks = fullText.split(blockRegEx);
-    // console.log('HTML blocks: ', htmlBlocks);
+    // logger.log('HTML blocks: ', htmlBlocks);
 
     // merge both arrays into one final using the CodeBlocks:
     for (let i = 0; i < htmlBlocks.length - 1; i++) {
@@ -68,18 +78,18 @@ module.exports = {
           block.nestLevel = nestLevel;
         }
       } // don't touch HTML blocks
-      // console.log(`Indentation level for: ${i} is: ${lastNestLevel}`);
+      // logger.log(`Indentation level for: ${i} is: ${lastNestLevel}`);
     });
   },
 
   returnAsLines(blocks) {
     let lines = [];
-    // console.log('in returnAsLines(). blocks:', blocks.length);
+    // logger.log('in returnAsLines(). blocks:', blocks.length);
     blocks.forEach((block, i) => {
-      // console.log(`${i}`, blocks[i]);
+      // logger.log(`${i}`, blocks[i]);
       lines = _.concat(lines, block.returnAsLines());
     });
-    // console.log('returning returnAsLines()');
+    // logger.log('returning returnAsLines()');
     return lines;
   },
 
@@ -105,19 +115,33 @@ module.exports = {
     };
 
     // Cut blanks lines from start and end:
-    console.log("getCodeBlocks");
+    logger.log("getCodeBlocks");
     lines = this.cutBlanksAtStartEnd(lines);
     // get code blocks:
-    console.log("getCodeBlocks"); 
+    logger.log("getCodeBlocks"); 
     const blocks = this.getCodeBlocks(lines, undefined, setup, editorSetup);
     // process nesting of the blocks:
-    console.log("processNesting");
+    logger.log("processNesting");
     this.processNesting(blocks);
-    console.log("returnAsLines");
+    logger.log("returnAsLines");
     const newLines = this.returnAsLines(blocks);
 
     // TODO: change me:
     return newLines.join("\n");
+  },
+
+  /**
+   * Setup the logger.
+   * @param {Object} beautifier
+   * @param {Object} editor
+   * @param {Object} logs
+   *    {string|Number} logLevel - Log level
+   *    {Boolean = true} loggerOn - enable the logger
+   */
+  setup(beautifier, editor, logs) {
+    
+
+    logger.setup(logs);
   }
 }
 
@@ -126,7 +150,7 @@ class CodeBlock {
     this.delimeter = delimeter === undefined ? '\n' : delimeter;
 
     this.indentator = editorSetup.insertSpaces ? ' '.repeat(editorSetup.tabSize) : '\t';
-    console.log(`Indentation Sign: "${this.indentator}". Use Spaces: ${editorSetup.insertSpaces}, width: ${editorSetup.tabSize}`);
+    logger.log(`Indentation Sign: "${this.indentator}". Use Spaces: ${editorSetup.insertSpaces}, width: ${editorSetup.tabSize}`);
     // this.indentator = indentationSign === undefined ? '\t' : indentationSign;
     this.indentMarker = '=>';
 
@@ -140,7 +164,7 @@ class CodeBlock {
     this.nestLevel = 0; // defaults
     this.nestModifier = 0; // is this (one-line) block increasing/decreasing the nest level?
 
-    // console.log('setup: ', setup);
+    // logger.log('setup: ', setup);
     this.capitalizeSet = setup.capitalizeSet;
     this.capitalizeVar = setup.capitalizeVar;
     this.capitalizeAndOrNot = setup.capitalizeAndOrNot;
@@ -223,14 +247,14 @@ class CodeBlock {
 
   formatForNext(line, i) {
     const forCounterCheck = /((NEXT)[\t\ ]+(\S+)|(NEXT))/gi;
-    console.log('... HEY NEXT!!');
+    logger.log('... HEY NEXT!!');
 
     let _this = this;
     if (forCounterCheck.test(line)) {
-      console.log(`..."${line}"`);
+      logger.log(`..."${line}"`);
       try {
         return line.replace(forCounterCheck, function (match, p1, p2, p3) {
-          // console.log('====>', match, p1, p2, p3);
+          // logger.log('====>', match, p1, p2, p3);
           if (p2 && p3) {
             return _this.formatNextIteration(p2, p3);
           } else {
@@ -238,28 +262,28 @@ class CodeBlock {
           }
         });
       } catch (err) {
-        console.log('!ERROR:: ', err);
+        logger.log('!ERROR:: ', err);
       }
     }
-    console.log('... STILL HERE!!');
+    logger.log('... STILL HERE!!');
     return line;
   }
 
   formatNextIteration(nextKeyword, counter) {
     nextKeyword = nextKeyword.trim();
-    console.log(`=> NEXT: "${nextKeyword}", counter: "${counter}"`);
+    logger.log(`=> NEXT: "${nextKeyword}", counter: "${counter}"`);
     if (this.capitalizeIfFor) {
       nextKeyword = nextKeyword.toUpperCase();
     } else {
       nextKeyword = nextKeyword.toLowerCase();
     }
-    // console.log(`=> NEXT: "${nextKeyword}"`);
+    // logger.log(`=> NEXT: "${nextKeyword}"`);
     if (typeof counter === 'string' && counter !== '') {
       // TODO: finish this:
       // let statement = this.formatStatement(condition);
       return `${nextKeyword} ${counter}`;
     } else {
-      // console.log(`=> no counter`);
+      // logger.log(`=> no counter`);
       return `${nextKeyword}`;
     }
   }
@@ -273,7 +297,7 @@ class CodeBlock {
     }
 
     if (declarationCheck.test(line)) {
-      console.log(`VAR: "${line}"`);
+      logger.log(`VAR: "${line}"`);
       let paramsStr = line.replace(declarationCheck, '$1');
       let vars = paramsStr.split(',');
       let params = [];
@@ -289,14 +313,14 @@ class CodeBlock {
   formatAssignment(line) {
     // const lines = typeof this.lines === 'string' ? [this.lines] : this.lines;
     const assignmentRegEx = /set[\ \t]+(\@\w+)[\ \t]*=[\ \t]*([\S\ \t]+)/gi;
-    // console.log('typeof: ' + typeof this.lines, Array.isArray(this.lines));
+    // logger.log('typeof: ' + typeof this.lines, Array.isArray(this.lines));
     let setKeyword = 'set';
     if (this.capitalizeSet) {
       setKeyword = 'SET';
     }
 
     if (assignmentRegEx.test(line)) {
-      // console.log('Matched assignment!');
+      // logger.log('Matched assignment!');
       return line.replace(assignmentRegEx, setKeyword + ' $1 = $2');
     }
     return line;
@@ -309,7 +333,7 @@ class CodeBlock {
       const _this = this;
       return line.replace(methodsDetect, function (match, p1, p2) {
         let method = _this.formatMethod(p2, 0);
-        // console.log(`${i}: ${method}`);
+        // logger.log(`${i}: ${method}`);
         return `${p1}${method}`;
       });
     }
@@ -328,10 +352,10 @@ class CodeBlock {
 
     parametersList.forEach((param, i, parametersList) => {
       let paramCopy = param.trim();
-      // console.log(`...`,paramCopy);
+      // logger.log(`...`,paramCopy);
 
       if (methodsDetect.test(paramCopy)) {
-        console.log(`Nested method: ${methodIndent}`);
+        logger.log(`Nested method: ${methodIndent}`);
         paramCopy = this.formatMethod(paramCopy, methodIndent + 1);
       }
       parametersList[i] = paramCopy;
@@ -340,7 +364,7 @@ class CodeBlock {
     parameters = this.joinMethodParameters(parametersList, methodIndent);
     // to be sure, that method ending does not contain another method:
     if (methodsDetect.test(methodEnd)) {
-      console.log(`Nested method in methodEnd! ${methodIndent}`);
+      logger.log(`Nested method in methodEnd! ${methodIndent}`);
       methodEnd = this.formatMethod(methodEnd, 0);
     }
     // return:
@@ -349,7 +373,7 @@ class CodeBlock {
 
   joinMethodParameters(parametersList, methodIndent) {
     let params;
-    // console.log(`joinMethodParameters: ${parametersList.length}, methodIndent: ${methodIndent}.`);
+    // logger.log(`joinMethodParameters: ${parametersList.length}, methodIndent: ${methodIndent}.`);
     if (parametersList.length > this.maxParametersPerLine) {
       for (let i = 0; i < parametersList.length; i++) {
         parametersList[i] = `${this.indentMarker.repeat(methodIndent + 1)}${parametersList[i]}`;
@@ -367,7 +391,7 @@ class CodeBlock {
     const statementRegEx = /^\s*(IF|ELSEIF)\s+(.*)\s+(THEN)\s*$/gi;
 
     if (statementRegEx.test(line)) {
-      // console.log(i, ': OK :', line);
+      // logger.log(i, ': OK :', line);
       let _this = this;
       return line.replace(statementRegEx, function (match, p1, p2, p3) {
         return _this.formatIf(p1, p2, p3);
@@ -381,7 +405,7 @@ class CodeBlock {
 
     let _this = this;
     if (elseOrEndifCheck.test(line)) {
-      console.log('ELSE:', line);
+      logger.log('ELSE:', line);
       return line.replace(elseOrEndifCheck, function (match, p1) {
         return _this.formatElseAndEndif(p1);
       });
@@ -486,9 +510,9 @@ class CodeBlock {
 
   checkForOutputAmpBlock() {
     const outputAmpCheck = /^\s*(%%=.*=%%)\s*$/gi;
-    // console.log('block:', this.lines);
+    // logger.log('block:', this.lines);
     if (outputAmpCheck.test(this.lines)) {
-      // console.log('output AMP:', this.lines);
+      // logger.log('output AMP:', this.lines);
       this.isOutputAmp = true;
     }
   }
@@ -506,7 +530,7 @@ class CodeBlock {
           content: line
         };
         if (commentBreaker.test(line)) {
-          console.log('//comment =>\n', line, '\n<= comment end');
+          logger.log('//comment =>\n', line, '\n<= comment end');
           lineBlock.keepBreaking = false;
         }
         newLines.push(lineBlock);
@@ -585,7 +609,7 @@ class CodeBlock {
 
     lines.forEach((line) => {
       if (line.keepBreaking) {
-        console.log('LINES BREAK:', line.content);
+        logger.log('LINES BREAK:', line.content);
         // normal piece of code - break it:
         lineChanges = line.content;
         for (let i in breakers) {
@@ -596,10 +620,10 @@ class CodeBlock {
           let counter = 0;
 
           let lineChanged = breakRegEx.test(lineChanges);
-          if (lineChanged) { console.log("--->", breakers[i].name, ' ==> ', lineChanged); }
+          if (lineChanged) { logger.log("--->", breakers[i].name, ' ==> ', lineChanged); }
           while (lineChanged && counter++ < 2) {
-            // if (breakers[i].name === 'for') { console.log(`==> `, lineChanges.match(breakRegEx)); } 
-            // if (breakers[i].name === 'methods-after-value') { console.log(`==> `, lineChanges.match(breakRegEx)); }
+            // if (breakers[i].name === 'for') { logger.log(`==> `, lineChanges.match(breakRegEx)); } 
+            // if (breakers[i].name === 'methods-after-value') { logger.log(`==> `, lineChanges.match(breakRegEx)); }
             lineChanges = lineChanges.replace(breakRegEx, replaceWith);
           }
         }
@@ -631,7 +655,7 @@ class CodeBlock {
     // must be handled separately!
     const inLineIndentation = typeof inBlockLineIndentation === 'number' ? inBlockLineIndentation : 0;
     const nstLvl = this.nestLevel >= 0 ? this.nestLevel : 0; // because no block can start at minus column
-    // console.log(`${this.nestLevel}, ${inLineIndentation}`);
+    // logger.log(`${this.nestLevel}, ${inLineIndentation}`);
     const finalIndent = nstLvl + inLineIndentation >= 0 ? nstLvl + inLineIndentation : 0;
     return this.indentator.repeat(finalIndent);
   }
@@ -640,13 +664,13 @@ class CodeBlock {
     const commentBreaker = /(\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->)/gi;
     let parts = this.lines.split(commentBreaker);
     let lines = [];
-    // console.log(parts);
+    // logger.log(parts);
 
     if (typeof this.lines === 'string') {
       parts.forEach((part) => {
 
         if (commentBreaker.test(part)) {
-          console.log('skip: ', part);
+          logger.log('skip: ', part);
         } else {
           let codeParts = part.split(this.delimeter);
           part = codeParts.join(' ');
@@ -679,16 +703,16 @@ class CodeBlock {
         // to handle inner-blocks:
         if (blockOpeners.test(lineCopy)) {
           // opening block:
-          // console.log(`>> ${lineCopy}`);
+          // logger.log(`>> ${lineCopy}`);
           finalNestChange += 1;
         } else if (blockClosure.test(lineCopy)) {
           // closing block:
-          // console.log(`<< ${lineCopy}`);
+          // logger.log(`<< ${lineCopy}`);
           finalNestChange -= 1;
         }
       }
     }, this);
-    // console.log(`block nest change: ` + finalNestChange);
+    // logger.log(`block nest change: ` + finalNestChange);
     return finalNestChange;
   }
 
@@ -730,11 +754,11 @@ class CodeBlock {
     let startsWithElse = null; // not defined; true - take away one tab from block's %%[]%% indents
 
     lines.forEach((line, i) => {
-      // console.log(`${i}`, blocks[i]);
+      // logger.log(`${i}`, blocks[i]);
       let lineCopy = line.trim();
 
       let currentIndent = inBlockIndent;
-      // console.log(`${i} "${lineCopy}"`, blockClosure.test(line));
+      // logger.log(`${i} "${lineCopy}"`, blockClosure.test(line));
       if (i > 0 && i < lines.length - 1) {
         // to handle inner-blocks:
         if (blockReOpeners.test(lineCopy)) { // re-opening block:
@@ -767,14 +791,14 @@ class CodeBlock {
         lineCopy = this.getIndentation(currentIndent) + this.getMethodIndentation(lineCopy);
 
       }
-      // console.log(`${i}: ${inBlockIndent}`);
+      // logger.log(`${i}: ${inBlockIndent}`);
       lines[i] = lineCopy;
     }, this);
 
     // if the block starts with else/elseif:
-    // console.log(`Starts with Indent: ${startsWithElse}, indent: ${initialIndent}`);
+    // logger.log(`Starts with Indent: ${startsWithElse}, indent: ${initialIndent}`);
     initialIndent = startsWithElse === true ? initialIndent - 1 : initialIndent;
-    // if (startsWithElse === true) { console.log('...', initialIndent, lines[1]); }
+    // if (startsWithElse === true) { logger.log('...', initialIndent, lines[1]); }
     this.indentBlockParenthesis(lines, initialIndent);
 
     // join:
@@ -782,16 +806,16 @@ class CodeBlock {
   }
 
   returnAsLines() {
-    // console.log(`=> isAmp: ${this.isAmp}, type: ${typeof this.lines}, isArray: ${Array.isArray(this.lines)}`);
+    // logger.log(`=> isAmp: ${this.isAmp}, type: ${typeof this.lines}, isArray: ${Array.isArray(this.lines)}`);
     if (Array.isArray(this.lines)) {
       this.lines = this.lines.join(this.delimeter);
     }
-    // console.log(`Block - isAmp: ${this.isAmp}, isOneLine: ${this.isOneliner}, isOutputAmp: ${this.isOutputAmp}`);
+    // logger.log(`Block - isAmp: ${this.isAmp}, isOneLine: ${this.isOneliner}, isOutputAmp: ${this.isOutputAmp}`);
     if (this.isAmp && !this.isOneliner) { // if AMPscript:
       this.indentAmpBlockLines();
     } else if (this.isOutputAmp || this.isOneliner) { // in case of Output AMPscript %%= =%%:
       // this is for one-liner output AMPscript:
-      // console.log(`...oneLineIndent. ${typeof this.lines}, ${this.nestLevel}`);
+      // logger.log(`...oneLineIndent. ${typeof this.lines}, ${this.nestLevel}`);
       this.lines = this.lines.trim();
       this.lines = this.getIndentation() + this.lines;
     }

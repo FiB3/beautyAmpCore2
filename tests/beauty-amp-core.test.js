@@ -1,6 +1,15 @@
 const beautifier = require('../beauty-amp-core');
 
-test('crappy test', () => {
+
+
+beforeEach(() => {
+    beautifier.setup(undefined, undefined, {
+        loggerOn: false
+    });
+});
+
+test("NEXT in string test", () => {
+
   const testCase = `<h1>broken by the "next"</h1>
 %%[VAR @FullCtaUrl 
 If ( @CtaCode == "Whatsnext" or @CtaCode=="Rprhist_AS") then 
@@ -14,7 +23,7 @@ Else
 endif
 ]%%`.split('\n');
 
-const testRes = `<h1>broken by the "next"</h1>
+    const testRes = `<h1>broken by the "next"</h1>
 %%[
     VAR @FullCtaUrl
     IF ( @CtaCode == "Whatsnext" OR @CtaCode=="Rprhist_AS") THEN

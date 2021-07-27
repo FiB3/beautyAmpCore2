@@ -12,3 +12,5 @@ jsconfig.json
 .DS_Store
 
 coverage
+
+playground.js
