@@ -8,6 +8,55 @@ beforeEach(() => {
     });
 });
 
+test("Array as input", () => {
+    let testCase = [`<h1>My Test Case:</h1>`,
+        `%%[ VAR @lang `,
+        `If (@lang == 'EN') then Output("Hello World!")`,
+        `Else`,
+        `	Output("Ciao!")`,
+        `endif`,
+        `]%%`
+    ];
+
+    let testRes = [`<h1>My Test Case:</h1>`,
+`%%[`,
+`    VAR @lang`,
+`    IF (@lang == 'EN') THEN`,
+`        Output("Hello World!")`,
+`    ELSE`,
+`        Output("Ciao!")`,
+`    ENDIF`,
+`]%%`,
+``];
+
+    const res = beautifier.beautify(testCase);
+    expect(Array.isArray(res)).toBeTruthy();
+    expect(res).toStrictEqual(testRes);
+});
+
+test("Array as string", () => {
+    let testCase = `<h1>My Test Case:</h1>
+%%[ VAR @lang If (@lang == 'EN') then Output("Hello World!")
+Else
+	Output("Ciao!")
+endif        ]%%`;
+
+    let testRes = `<h1>My Test Case:</h1>
+%%[
+    VAR @lang
+    IF (@lang == 'EN') THEN
+        Output("Hello World!")
+    ELSE
+        Output("Ciao!")
+    ENDIF
+]%%
+`;
+
+    const res = beautifier.beautify(testCase);
+    expect(typeof(res)).toBe('string');
+    expect(res).toBe(testRes);
+});
+
 test("NEXT in string test", () => {
 
   let testCase = `<h1>broken by the "next"</h1>
@@ -23,7 +72,7 @@ Else
 endif
 ]%%`;
 
-  const testRes = `<h1>broken by the "next"</h1>
+  let testRes = `<h1>broken by the "next"</h1>
 %%[
     VAR @FullCtaUrl
     IF ( @CtaCode == "Whatsnext" OR @CtaCode=="Rprhist_AS") THEN
@@ -39,9 +88,11 @@ endif
 `;
 
   testCase = testCase.split('\n');
+  testRes = testRes.split('\n');
 
   const res = beautifier.beautify(testCase);
-  expect(res).toBe(testRes);
+  expect(Array.isArray(res)).toBeTruthy();
+  expect(res).toStrictEqual(testRes);
 });
 
 test("IIF with nested function & multi-line comment", () => {
@@ -76,9 +127,6 @@ test("IIF with nested function & multi-line comment", () => {
     ) OR @Title==EMPTY(@Title), '', Concat(' ', @Title))
 ]%%
 `;
-
-
-  testCase = testCase.split('\n');
 
   const res = beautifier.beautify(testCase);
   expect(res).toBe(testRes);

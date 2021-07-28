@@ -103,10 +103,21 @@ module.exports = {
 
   /**
    * Format code.
-   * @param {Array} lines text of your code as an Array.
-   * @return {String} Code as string. [subject to future change]
+   * Lines are broken on "\n".
+   * @param {Array|String} lines text of your code.
+   * @return {Array|String} Formatted code. Array or string based on the initial input.
    */
   beautify(lines) {
+    let isArray;
+    if (typeof(lines) === 'string') {
+      isArray = false;
+      lines = lines.split('\n');
+    } else if (Array.isArray(lines)) {
+      isArray = true;
+    } else {
+      throw "Unsuported 'lines' data type.";
+    }
+
     // Cut blanks lines from start and end:
     logger.log("getCodeBlocks");
     lines = this.cutBlanksAtStartEnd(lines);
@@ -120,7 +131,11 @@ module.exports = {
     const newLines = this.returnAsLines(blocks);
 
     // TODO: change me:
-    return newLines.join("\n");
+    if (isArray) {
+      return newLines.join("\n").split("\n");
+    } else {
+      return newLines.join("\n");
+    }
   },
 
   /**
