@@ -26,8 +26,13 @@ let lines = [`<h1>My Test Case:</h1>`,
 `]%%`];
 
 const result = beautifier.beautify(lines);
-console.log(result);
+console.log(result); // returns code as an array
 ```
+
+### beautify(lines)
+Format code. Lines are broken on `"\n"`.  
+`lines`: __Array|String__ - text of your code  
+`return`: __{Array|String}__ Formatted code. Array or string based on the initial input.
 
 ## Setup
 
