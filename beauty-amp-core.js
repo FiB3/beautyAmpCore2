@@ -13,8 +13,8 @@ let setup = {
     maxParametersPerLine: 4
   },
   editor: {
-    insertSpaces: true
-    // tabSize: 4
+    insertSpaces: true,
+    tabSize: 4
   }
 };
 
@@ -158,7 +158,7 @@ module.exports = {
 
     if (editor) {
       setup.editor.insertSpaces = editor.insertSpaces === true ? true : false;
-      // setup.editor.tabSize = _.isInteger(editor.tabSize) ? editor.tabSize : 4;
+      setup.editor.tabSize = _.isInteger(editor.tabSize) ? editor.tabSize : 4;
     }
 
     logger.setup(logs);
