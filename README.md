@@ -48,8 +48,7 @@ const ampscript = {
 };
 // immutable at the moment:
 const editor = {
-  insertSpaces: true,
-  tabSize: 4
+  insertSpaces: true
 };
 // logs trough console only for the moment.
 const logs = {

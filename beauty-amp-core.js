@@ -3,6 +3,7 @@ const formatters = require('./src/formatters');
 
 const Logger = require("./src/logger");
 
+// set defaults:
 let setup = {
   ampscript: {
     capitalizeAndOrNot:true,
@@ -12,8 +13,8 @@ let setup = {
     maxParametersPerLine: 4
   },
   editor: {
-    insertSpaces: true,
-    tabSize: 4
+    insertSpaces: true
+    // tabSize: 4
   }
 };
 
@@ -147,20 +148,18 @@ module.exports = {
    *    {Boolean = true} loggerOn - enable the logger
    */
   setup(ampscript, editor, logs) {
-    // default:
-    // setup.ampscript = {
-    //   capitalizeAndOrNot:true,
-    //   capitalizeIfFor:true,
-    //   capitalizeSet:true,
-    //   capitalizeVar:true,
-    //   maxParametersPerLine: 4
-    // };
+    if (ampscript) {
+      setup.ampscript.capitalizeAndOrNot = ampscript.capitalizeAndOrNot === true ? true : false;
+      setup.ampscript.capitalizeIfFor = ampscript.capitalizeIfFor === true ? true : false;
+      setup.ampscript.capitalizeSet = ampscript.capitalizeSet === true ? true : false;
+      setup.ampscript.capitalizeVar = ampscript.capitalizeVar === true ? true : false;
+      setup.ampscript.maxParametersPerLine = _.isInteger(ampscript.maxParametersPerLine) ? ampscript.maxParametersPerLine : 4;
+    }
 
-    // // default:
-    // setup.editor = {
-    //   insertSpaces: true,
-    //   tabSize: 4
-    // };
+    if (editor) {
+      setup.editor.insertSpaces = editor.insertSpaces === true ? true : false;
+      // setup.editor.tabSize = _.isInteger(editor.tabSize) ? editor.tabSize : 4;
+    }
 
     logger.setup(logs);
   }
