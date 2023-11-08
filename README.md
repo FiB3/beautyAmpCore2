@@ -1,17 +1,18 @@
-# BEAUTY AMP CORE
+# Beauty AMP Core 2
 
 This library gives you the option to format AMPscript code used in SFMC.
+Duplicated to ensure support of the original library.
 
 ## Installation
 
 ```
-> npm install --save beauty-amp-core
+> npm install --save beauty-amp-core2
 ```
 
 ## Usage
 
 ``` javascript
-const beautifier = require('beauty-amp-core');
+const beautifier = require('beauty-amp-core2');
 
 beautifier.setup(undefined, undefined, {
   loggerOn: false

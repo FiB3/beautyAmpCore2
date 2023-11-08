@@ -120,7 +120,7 @@ module.exports = {
     }
 
     // Cut blanks lines from start and end:
-    logger.log("getCodeBlocks");
+    logger.log("getCodeBlocks()");
     lines = this.cutBlanksAtStartEnd(lines);
     // get code blocks:
     logger.log("getCodeBlocks"); 
@@ -632,14 +632,20 @@ class CodeBlock {
         logger.log('LINES BREAK:', line.content);
         // normal piece of code - break it:
         lineChanges = line.content;
-        for (let i in breakers) {
+        for (let i = 0; i < breakers.length; i++) {
           const breakRegEx = breakers[i].reg;
           let replaceWith = (breakers[i].noNewLine ? '' : this.delimeter) + breakers[i].replace;
 
           // while there are stuff to change - for cases, when matches can be overlaping:
           let counter = 0;
-
-          let lineChanged = breakRegEx.test(lineChanges);
+          let lineChanged;
+          try {
+            lineChanged = breakRegEx.test(lineChanges);
+          } catch (err) {
+            console.log(`Error:`, err);
+            console.log(`Breaker ${i}/${breakers.length}:`, breakers[i]);
+          }
+          
           if (lineChanged) { logger.log("--->", breakers[i].name, ' ==> ', lineChanged); }
           while (lineChanged && counter++ < 2) {
             // if (breakers[i].name === 'for') { logger.log(`==> `, lineChanges.match(breakRegEx)); } 

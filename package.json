@@ -1,28 +1,22 @@
 {
-  "name": "beauty-amp-core",
-  "version": "0.3.7",
-  "description": "Beautify (prettify) AMPscript for Marketing Cloud - prettifying library only.",
-  "publisher": "FiB",
+  "name": "beauty-amp-core2",
+  "version": "0.3.8",
+  "description": "Beautify (prettify) AMPscript for Marketing Cloud - prettifying library only. Version for further support.",
+  "publisher": "fib3",
   "author": {
     "name": "filipbostik"
   },
   "main": "beauty-amp-core.js",
   "scripts": {
-    "test": "jest"
   },
   "keywords": [],
   "dependencies": {},
   "devDependencies": {
-    "jest": "^27.0.6"
   },
   "license": "BSD-4-CLAUSE",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fib-at-isobar/beautyAmpCore"
+    "url": "https://github.com/FiB3/beautyAmpCore2"
   },
-  "homepage": "https://github.com/fib-at-isobar/beautyAmpCore",
-  "jest": {
-    "verbose": true,
-    "collectCoverage": false
-  }
+  "homepage": "https://github.com/FiB3/beautyAmpCore2"
 }
