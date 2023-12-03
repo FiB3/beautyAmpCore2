@@ -1,3 +1,4 @@
+const prettier = require('prettier');
 const _ = require('lodash');
 const formatters = require('./src/formatters');
 
@@ -15,6 +16,13 @@ let setup = {
   editor: {
     insertSpaces: true,
     tabSize: 4
+  },
+  htmlOptions: {
+    parser: 'html',
+    semi: false,
+    singleQuote: true,
+    useTabs: false,
+    tabWidth: 4
   }
 };
 
@@ -108,15 +116,16 @@ module.exports = {
    * @param {Array|String} lines text of your code.
    * @return {Array|String} Formatted code. Array or string based on the initial input.
    */
-  beautify(lines) {
-    let isArray;
+  async beautify(lines) {
+    let isArray = Array.isArray(lines);
+    // run Prettier on HTML:
+    lines = await prettifyHtml(lines);
+    logger.log("Beautify: " + isArray + " - " + typeof(lines));
+
     if (typeof(lines) === 'string') {
-      isArray = false;
       lines = lines.split('\n');
-    } else if (Array.isArray(lines)) {
-      isArray = true;
-    } else {
-      throw "Unsuported 'lines' data type.";
+    } else if (!isArray) {
+      throw "Unsupported 'lines' data type.";
     }
 
     // Cut blanks lines from start and end:
@@ -159,6 +168,9 @@ module.exports = {
     if (editor) {
       setup.editor.insertSpaces = editor.insertSpaces === true ? true : false;
       setup.editor.tabSize = _.isInteger(editor.tabSize) ? editor.tabSize : 4;
+
+      setup.htmlOptions.useTabs = !setup.editor.insertSpaces;
+      setup.htmlOptions.tabWidth = setup.editor.tabSize;
     }
 
     logger.setup(logs);
@@ -849,4 +861,20 @@ class CodeBlock {
 
     return this.lines;
   }
+}
+
+/**
+ * Prettify HTML code.
+ * @param {string|Array} code code as string or array
+ * @returns {string} Prettified code.
+ */
+async function prettifyHtml(code) {
+  if (Array.isArray(code)) {
+    code = code.join('\n');
+  } else if (typeof(code) !== 'string') {
+    throw "Unsupported 'code' data type for prettier.";
+  }
+  let x = await prettier.format(code, setup.htmlOptions);
+  logger.log(`prettifyHtml`, typeof(x));
+  return x;
 }

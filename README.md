@@ -1,6 +1,7 @@
 # Beauty AMP Core 2
 
-This library gives you the option to format AMPscript code used in SFMC.
+This library gives you the option to format AMPscript code used in SFMC.  
+Includes HTML formatting using Prettier.  
 Duplicated to ensure support of the original library.
 
 ## Installation
@@ -47,12 +48,12 @@ const ampscript = {
   capitalizeVar:true,
   maxParametersPerLine: 4
 };
-// immutable at the moment:
+
 const editor = {
   insertSpaces: true,
   tabSize: 4
 };
-// logs trough console only for the moment.
+
 const logs = {
   loggerOn: true // <= disable logging
 };
