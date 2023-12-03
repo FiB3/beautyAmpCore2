@@ -27,7 +27,7 @@ let lines = [`<h1>My Test Case:</h1>`,
 `endif`,
 `]%%`];
 
-const result = beautifier.beautify(lines);
+const result = await beautifier.beautify(lines);
 console.log(result); // returns code as an array
 ```
 
