@@ -7,10 +7,10 @@ const Logger = require("./src/logger");
 // set defaults:
 let setup = {
   ampscript: {
-    capitalizeAndOrNot:true,
-    capitalizeIfFor:true,
-    capitalizeSet:true,
-    capitalizeVar:true,
+    capitalizeAndOrNot: true,
+    capitalizeIfFor: true,
+    capitalizeSet: true,
+    capitalizeVar: true,
     maxParametersPerLine: 4
   },
   editor: {
@@ -67,6 +67,34 @@ module.exports = {
     return blocks;
   },
 
+  /**
+   * Remove AMPscript from HTML, so it does not get messed up by Prettier.
+   * @param {*} lines
+   * @returns {*} lines
+   */
+  async processHtml(lines) {
+    const ampBlocks = this.getCodeBlocks(lines, undefined, setup.ampscript, setup.editor);
+
+    let lns = ampBlocks.map((block, i) => {
+      return block.isAmp ?
+          `{{block-${i}}}`
+          : block.lines;
+    });
+
+    lns = await prettifyHtml(lns);
+
+    ampBlocks.forEach((block, i) => {
+      if (block.isAmp) {
+        // string replace & join if Array
+        const l = Array.isArray(block.lines) ? block.lines.join('\n') : block.lines;
+        lns = lns.replace(`{{block-${i}}}`, l);
+      }
+    });
+    
+    // console.log(lns);
+    return lns.split('\n');
+  },
+
   processNesting(blocks) {
     // let lastModifier = 0;
     let modifier = '';
@@ -120,15 +148,20 @@ module.exports = {
    */
   async beautify(lines) {
     let isArray = Array.isArray(lines);
-    // run Prettier on HTML:
-    lines = await prettifyHtml(lines);
-    logger.log("Beautify: " + isArray + " - " + typeof(lines));
-
     if (typeof(lines) === 'string') {
       lines = lines.split('\n');
     } else if (!isArray) {
       throw "Unsupported 'lines' data type.";
     }
+
+    // run Prettier on HTML:
+    lines = await this.processHtml(lines);
+    // console.log(lines);
+
+    // lines = await prettifyHtml(html);
+    // console.log(lines);
+    // logger.log("Beautify: " + isArray + " - " + typeof(lines));
+
 
     // Cut blanks lines from start and end:
     logger.log("getCodeBlocks()");

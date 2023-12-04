@@ -130,6 +130,48 @@ test("IIF with nested function & multi-line comment", async () => {
   expect(res).toBe(testRes);
 });
 
+test("HTML with IIF with nested function & multi-line comment", async () => {
+    let testCase = `
+    <p>TEST</p>
+    %%[
+            /*
+                    * example on how to use this
+                    * example on how to use this
+            */
+    ]%%
+    <div class="test2">
+        <p>Hello2</p>
+        </div>
+    %%[
+            SET @Title = IIF(EMPTY(@Title) OR @Title=="\'Without title" OR @Title==Concat('<a href="mailto: ', @rawStoreEmail, '">', @rawStoreEmail, '</a>'    ) OR @Title==EMPTY(@Title), '', Concat(' ', @Title))
+    ]%%
+  `;
+  
+    const testRes = `<p>TEST</p>
+%%[
+    /*
+    * example on how to use this
+    * example on how to use this
+    */
+]%%
+<div class="test2">
+    <p>Hello2</p>
+</div>
+%%[
+    SET @Title = IIF(EMPTY(@Title) OR @Title=="'Without title" OR @Title==Concat(
+        '<a href="mailto: ',
+        @rawStoreEmail,
+        '">',
+        @rawStoreEmail,
+        '</a>'
+    ) OR @Title==EMPTY(@Title), '', Concat(' ', @Title))
+]%%    
+  `;
+  
+    const res = await beautifier.beautify(testCase);
+    expect(res).toBe(testRes);
+  });
+
 test("Test including HTML and Javascript.", async () => {
     let testCase = `
     <div id="test"><p>Hello</p>
