@@ -7,7 +7,9 @@
     "name": "filipbostik"
   },
   "main": "beauty-amp-core.js",
-  "scripts": {},
+  "scripts": {
+    "test": "node node_modules/.bin/jest ./tests/"
+  },
   "keywords": [],
   "dependencies": {
     "lodash": "^4.17.21",
@@ -18,5 +20,8 @@
     "type": "git",
     "url": "git+https://github.com/FiB3/beautyAmpCore2.git"
   },
-  "homepage": "https://github.com/FiB3/beautyAmpCore2"
+  "homepage": "https://github.com/FiB3/beautyAmpCore2",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
 }

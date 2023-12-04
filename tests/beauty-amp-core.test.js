@@ -1,14 +1,12 @@
 const beautifier = require('../beauty-amp-core');
 
-
-
 beforeEach(() => {
     beautifier.setup(undefined, undefined, {
         loggerOn: false
     });
 });
 
-test("Array as input", () => {
+test("Array as input", async () => {
     let testCase = [`<h1>My Test Case:</h1>`,
         `%%[ VAR @lang `,
         `If (@lang == 'EN') then Output("Hello World!")`,
@@ -29,12 +27,12 @@ test("Array as input", () => {
 `]%%`,
 ``];
 
-    const res = beautifier.beautify(testCase);
+    const res = await beautifier.beautify(testCase);
     expect(Array.isArray(res)).toBeTruthy();
     expect(res).toStrictEqual(testRes);
 });
 
-test("Array as string", () => {
+test("Array as string", async () => {
     let testCase = `<h1>My Test Case:</h1>
 %%[ VAR @lang If (@lang == 'EN') then Output("Hello World!")
 Else
@@ -52,12 +50,12 @@ endif        ]%%`;
 ]%%
 `;
 
-    const res = beautifier.beautify(testCase);
+    const res = await beautifier.beautify(testCase);
     expect(typeof(res)).toBe('string');
     expect(res).toBe(testRes);
 });
 
-test("NEXT in string test", () => {
+test("NEXT in string test", async () => {
 
   let testCase = `<h1>broken by the "next"</h1>
 %%[VAR @FullCtaUrl 
@@ -90,12 +88,12 @@ endif
   testCase = testCase.split('\n');
   testRes = testRes.split('\n');
 
-  const res = beautifier.beautify(testCase);
+  const res = await beautifier.beautify(testCase);
   expect(Array.isArray(res)).toBeTruthy();
   expect(res).toStrictEqual(testRes);
 });
 
-test("IIF with nested function & multi-line comment", () => {
+test("IIF with nested function & multi-line comment", async () => {
   let testCase = `
     %%[
         /*
@@ -128,6 +126,60 @@ test("IIF with nested function & multi-line comment", () => {
 ]%%
 `;
 
-  const res = beautifier.beautify(testCase);
+  const res = await beautifier.beautify(testCase);
   expect(res).toBe(testRes);
+});
+
+test("Test including HTML and Javascript.", async () => {
+    let testCase = `
+    <div id="test"><p>Hello</p>
+    <div class="test2">
+    <p>Hello2</p>
+    </div></div>
+    <script runat="server">Platform.Load("core", "1.1.1");
+    /**
+     * X...
+     */
+    try {
+        Write('Hello World!');
+    
+        // var x;
+        var x = {
+            "a": 42,
+            b: 3.14
+        };
+        /* TEST */
+    } catch (err) {
+        Write("Error: " + err + ". Message: " + err.message);
+        }
+    </script>
+`;
+
+const testRes = `<div id="test">
+    <p>Hello</p>
+    <div class="test2">
+        <p>Hello2</p>
+    </div>
+</div>
+<script runat="server">
+    Platform.Load("core", "1.1.1");
+    /**
+     * X...
+     */
+    try {
+        Write("Hello World!");
+
+        // var x;
+        var x = {
+            a: 42,
+            b: 3.14
+        };
+        /* TEST */
+    } catch (err) {
+        Write("Error: " + err + ". Message: " + err.message);
+    }
+</script>`;
+
+const res = await beautifier.beautify(testCase);
+expect(res).toBe(testRes);
 });

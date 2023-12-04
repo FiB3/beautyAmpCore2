@@ -19,10 +19,12 @@ let setup = {
   },
   htmlOptions: {
     parser: 'html',
-    semi: false,
-    singleQuote: true,
     useTabs: false,
-    tabWidth: 4
+    tabWidth: 4,
+    // other settings:
+    semi: true,
+    trailingComma: 'none',
+    singleQuote: false
   }
 };
 
