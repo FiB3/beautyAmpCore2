@@ -96,26 +96,30 @@ endif
 test("IIF with nested function & multi-line comment", async () => {
   let testCase = `
     %%[
-        /*
+        /**
             * example on how to use this
             * example on how to use this
         */
     ]%%
     
     %%[
+        /* example on how to use this
+        */
         SET @Title = IIF(EMPTY(@Title) OR @Title=="\'Without title" OR @Title==Concat('<a href="mailto: ', @rawStoreEmail, '">', @rawStoreEmail, '</a>'    ) OR @Title==EMPTY(@Title), '', Concat(' ', @Title))
     ]%%
 `;
 
   const testRes = `
 %%[
-    /*
-    * example on how to use this
-    * example on how to use this
-    */
+    /**
+     * example on how to use this
+     * example on how to use this
+     */
 ]%%
 
 %%[
+    /* example on how to use this
+     */
     SET @Title = IIF(EMPTY(@Title) OR @Title=="\'Without title" OR @Title==Concat(
         '<a href="mailto: ',
         @rawStoreEmail,
@@ -150,9 +154,9 @@ test("HTML with IIF with nested function & multi-line comment", async () => {
     const testRes = `<p>TEST</p>
 %%[
     /*
-    * example on how to use this
-    * example on how to use this
-    */
+     * example on how to use this
+     * example on how to use this
+     */
 ]%%
 <div class="test2">
     <p>Hello2</p>
@@ -224,4 +228,58 @@ const testRes = `<div id="test">
 
 const res = await beautifier.beautify(testCase);
 expect(res).toBe(testRes);
+});
+
+test("Function Multiline", async () => {
+    let testCase = `%%[ CreateSalesforceRecord('Lead', 'Id', '00Q123456789999XXX', 'Name', 'John Doe')
+    set @X = CreateSalesforceRecord('Lead', 'Id', '00Q123456789999XXX', 'Name', 'John Doe') ]%%`;
+
+    let testRes = [`
+%%[
+    CreateSalesforceRecord('Lead', 'Id', '00Q123456789999XXX', 'Name', 'John Doe')
+    SET @X = CreateSalesforceRecord(
+        'Lead',
+        'Id',
+        '00Q123456789999XXX',
+        'Name',
+        'John Doe'
+    )
+]%%
+    `];
+
+    const res = await beautifier.beautify(testCase);
+    expect(Array.isArray(res)).toBeTruthy();
+    expect(res).toStrictEqual(testRes);
+});
+
+
+test("ELSE-Plain-function-bug", async () => {
+    let testCase = `%%[ IF Length(@msg) == 0 THEN 
+        SET @response = 'You have unsubscribed and will no longer receive any messages.|' 
+        ENDIF
+    ELSE InsertData( @unsubEvents, 
+        'MobileNumber', @num, 'Message', [MSG(0).NOUNS], 'Status', 'Not Found' )  ENDIF ]%%`;
+
+    let testRes = [`
+%%[
+    IF Length(@msg) == 0 THEN 
+        SET @response = 'You have unsubscribed and will no longer receive any messages.|' 
+    ENDIF
+ELSE
+    InsertData(
+        @unsubEvents,
+        'MobileNumber',
+        @num,
+        'Message',
+        [MSG(0).NOUNS],
+        'Status',
+        'Not Found'
+    )
+ENDIF
+]%%
+    `];
+
+    const res = await beautifier.beautify(testCase);
+    expect(Array.isArray(res)).toBeTruthy();
+    expect(res).toStrictEqual(testRes);
 });

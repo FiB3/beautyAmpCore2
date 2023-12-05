@@ -314,7 +314,7 @@ class CodeBlock {
 
   formatForNext(line, i) {
     const forCounterCheck = /((NEXT)[\t\ ]+(\S+)|(NEXT))/gi;
-    logger.log('... HEY NEXT!!');
+    logger.log(`For-Next-start`);
 
     let _this = this;
     if (forCounterCheck.test(line)) {
@@ -332,7 +332,7 @@ class CodeBlock {
         logger.log('!ERROR:: ', err);
       }
     }
-    logger.log('... STILL HERE!!');
+    logger.log(`For-Next-end`);
     return line;
   }
 
@@ -435,12 +435,14 @@ class CodeBlock {
       methodEnd = this.formatMethod(methodEnd, 0);
     }
     // return:
-    return `${methodSplit[0]}${parameters}${methodEnd}`;
+    let lineRes = `${methodSplit[0]}${parameters}${methodEnd}`;
+    // logger.log(`formatMethod:"${lineRes}"`);
+    return lineRes;
   }
 
   joinMethodParameters(parametersList, methodIndent) {
     let params;
-    // logger.log(`joinMethodParameters: ${parametersList.length}, methodIndent: ${methodIndent}.`);
+    logger.log(`joinMethodParameters: ${parametersList.length}, methodIndent: ${methodIndent}.`);
     if (parametersList.length > this.maxParametersPerLine) {
       for (let i = 0; i < parametersList.length; i++) {
         parametersList[i] = `${this.indentMarker.repeat(methodIndent + 1)}${parametersList[i]}`;
@@ -450,7 +452,7 @@ class CodeBlock {
     } else {
       params = parametersList.join(', ');
     }
-
+    logger.log(`joinMethodParameters():"${params}"`);
     return params;
   }
 
@@ -825,9 +827,10 @@ class CodeBlock {
     let initialIndent = 0;
     let inBlockIndent = 1;
     let startsWithElse = null; // not defined; true - take away one tab from block's %%[]%% indents
+    let inMultilineComment = false;
 
     lines.forEach((line, i) => {
-      // logger.log(`${i}`, blocks[i]);
+      logger.log(`A${i}`, line);
       let lineCopy = line.trim();
 
       let currentIndent = inBlockIndent;
@@ -855,8 +858,15 @@ class CodeBlock {
           }
         } else {
           // inside some block or outside any block:
+          logger.log(`Inside Indent Block: ${i}: ${line}`);
           if (startsWithElse === null && lineCopy !== '') {
             startsWithElse = false;
+          }
+          lineCopy = inMultilineComment ? ' ' + lineCopy : lineCopy;
+          if (line.includes('/*')) {
+            inMultilineComment = true;
+          } else if (line.includes('*/')) {
+            inMultilineComment = false;
           }
         }
         // line = `||${lineCopy}||`;
@@ -864,7 +874,7 @@ class CodeBlock {
         lineCopy = this.getIndentation(currentIndent) + this.getMethodIndentation(lineCopy);
 
       }
-      // logger.log(`${i}: ${inBlockIndent}`);
+      logger.log(`${i}: ${inBlockIndent} - "${lineCopy}"`);
       lines[i] = lineCopy;
     }, this);
 
