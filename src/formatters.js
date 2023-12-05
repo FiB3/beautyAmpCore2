@@ -62,7 +62,7 @@ module.exports = {
   },
 
   /**
-   * Separate parameters of a method from metho name etc.
+   * Separate parameters of a method from method name etc.
    * Used for method formatting.
    * @param {string} methodStr string containing method (can contain the surrounding text - in case of IFF function, where is it e.g. statement)
    * @return {array} Array consisting of three items: ['...methodName(', 'parametersString', ')...']
