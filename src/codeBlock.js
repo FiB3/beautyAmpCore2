@@ -54,6 +54,7 @@ module.exports = class CodeBlock {
           lineTemp = this.formatAssignment(lineTemp);
           lineTemp = this.formatVarDeclaration(lineTemp, i);
           lineTemp = this.formatElseAndEndifLine(lineTemp, i);
+					logger.log(`formatElseAndEndifLine() => `, lineTemp);
           lineTemp = this.formatForDeclaration(lineTemp, i);
           lineTemp = this.formatForNext(lineTemp, i);
 
@@ -190,20 +191,25 @@ module.exports = class CodeBlock {
   }
 
   formatMethodLine(line, i) {
-    const methodsDetect = /(^[\t\ ]*|set[\t\ ]+@\w+[\t\ ]*=[\t\ ]*)(\w+\(.*\))/gi;
+		logger.log(`${i}:formatMethodLine("${line}")`);
+    const methodsDetect = /(\%\%\[[\t\ ]*|[\t\ ]*|set[\t\ ]+@\w+[\t\ ]*=[\t\ ]*)(\w+\(.*\))/gi;
+    // const methodsDetect = /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\((?:[^)(]|\((?:[^)(]|\([^)(]*\))*\))*\)/gi;
 
     if (methodsDetect.test(line)) {
       const _this = this;
       return line.replace(methodsDetect, function (match, p1, p2) {
         let method = _this.formatMethod(p2, 0);
         // logger.log(`${i}: ${method}`);
-        return `${p1}${method}`;
+        // return `${p1}${method}`;
+				return p1.includes('%%[') ? `${p1}\n${method}` : `${p1}${method}`; 
       });
     }
+		logger.log(`${i}:formatMethodLine(): ${line}`);
     return line;
   }
 
   formatMethod(methodStr, methodIndent) {
+		logger.log(`formatMethod("${methodStr}", ${methodIndent})`);
     // TODO: replace following regex with one that's not going to cause the issue #3
     // const commaBreaker = /,(?=(?:[^\"\'\(\)]*[\"\'\(\)][^\"\'\(\)]*[\"\'\(\)])*[^\"\'\(\)]*$)/gi;
     const methodsDetect = /(\w+)\((.*)\)/gi;
@@ -232,7 +238,7 @@ module.exports = class CodeBlock {
     }
     // return:
     let lineRes = `${methodSplit[0]}${parameters}${methodEnd}`;
-    // logger.log(`formatMethod:"${lineRes}"`);
+    logger.log(`formatMethod() => "${lineRes}"`);
     return lineRes;
   }
 
@@ -265,15 +271,42 @@ module.exports = class CodeBlock {
     return line;
   }
 
+	// formatElseAndEndifLine(line, i) {
+  //   const elseOrEndifCheck = /[\t\ ]*(ENDIF|ELSE)[\t\ ]*/gi; // original
+
+  //   let _this = this;
+  //   if (elseOrEndifCheck.test(line)) {
+  //     logger.log(`formatElseAndEndifLine("${line}"):`);
+  //     let lineRes = line.replace(elseOrEndifCheck, function (match, p1) {
+  //       return _this.formatElseAndEndif(p1);
+  //     });
+  //     logger.log(`formatElseAndEndifLine() => "${lineRes}"`);
+	// 		return lineRes;
+  //   }
+  //   return line;
+  // }
+
   formatElseAndEndifLine(line, i) {
-    const elseOrEndifCheck = /[\t\ ]*(ENDIF|ELSE)[\t\ ]*/gi;
+    const elseOrEndifFunctionCheck = /[\t\ ]*(ENDIF|ELSE)[\t\ ]*(\S+\()/gi;
+    const elseOrEndifCheck = /[\t\ ]*(ENDIF|ELSE)[\t\ ]*/gi; // original
 
     let _this = this;
-    if (elseOrEndifCheck.test(line)) {
-      logger.log('ELSE:', line);
-      return line.replace(elseOrEndifCheck, function (match, p1) {
+		if (elseOrEndifFunctionCheck.test(line)) {
+			logger.log(`formatElseAndEndifLine("${line}"):`);
+      let lineRes = line.replace(elseOrEndifFunctionCheck, function (match, p1, p2) {
+        // return _this.formatElseAndEndif(p1);
+				if (p2) logger.log(`formatElseAndEndifLine() - P1/P2: ${p1}-${p2}`);
+        return p2 ? `${_this.formatElseAndEndif(p1)}\n${p2}` : _this.formatElseAndEndif(p1);
+      });
+      logger.log(`formatElseAndEndifLine() => "${lineRes}"`);
+			return lineRes;
+		} else if (elseOrEndifCheck.test(line)) {
+      logger.log(`formatElseAndEndifLine("${line}"):`);
+      let lineRes = line.replace(elseOrEndifCheck, function (match, p1) {
         return _this.formatElseAndEndif(p1);
       });
+      logger.log(`formatElseAndEndifLine() => "${lineRes}"`);
+			return lineRes;
     }
     return line;
   }
@@ -664,7 +697,7 @@ module.exports = class CodeBlock {
             startsWithElse = false;
           }
           lineCopy = inMultilineComment ? ' ' + lineCopy : lineCopy;
-          if (line.includes('/*')) {
+          if (line.includes('/*') && !line.includes('*/')) {
             inMultilineComment = true;
           } else if (line.includes('*/')) {
             inMultilineComment = false;

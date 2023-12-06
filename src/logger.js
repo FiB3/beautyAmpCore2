@@ -21,7 +21,16 @@ module.exports = class Logger {
     setup = setup ? setup : {};
 
     this.on = setup.loggerOn === false ? false : true;
+    this.onValue = this.on;
     this.level = typeof(setup.logLevel) === 'string' ? setup.logLevel : 4;
+  }
+
+  enable() {
+    this.on = this.onValue;
+  }
+
+  disable() {
+    this.on = false;
   }
 
   log(...message) {

@@ -169,8 +169,8 @@ test("HTML with IIF with nested function & multi-line comment", async () => {
         @rawStoreEmail,
         '</a>'
     ) OR @Title==EMPTY(@Title), '', Concat(' ', @Title))
-]%%    
-  `;
+]%%
+`;
   
     const res = await beautifier.beautify(testCase);
     expect(res).toBe(testRes);
@@ -232,23 +232,23 @@ expect(res).toBe(testRes);
 
 test("Function Multiline", async () => {
     let testCase = `%%[ CreateSalesforceRecord('Lead', 'Id', '00Q123456789999XXX', 'Name', 'John Doe')
-    set @X = CreateSalesforceRecord('Lead', 'Id', '00Q123456789999XXX', 'Name', 'John Doe') ]%%`;
+    set @X = UpdateSalesforceRecord('Lead', 'Id', '00Q123456789999XXX') ]%%`;
 
-    let testRes = [`
+    let testRes = `
 %%[
-    CreateSalesforceRecord('Lead', 'Id', '00Q123456789999XXX', 'Name', 'John Doe')
-    SET @X = CreateSalesforceRecord(
+    CreateSalesforceRecord(
         'Lead',
         'Id',
         '00Q123456789999XXX',
         'Name',
         'John Doe'
     )
+    SET @X = UpdateSalesforceRecord('Lead', 'Id', '00Q123456789999XXX')
 ]%%
-    `];
+`;
 
     const res = await beautifier.beautify(testCase);
-    expect(Array.isArray(res)).toBeTruthy();
+    expect(!Array.isArray(res)).toBeTruthy();
     expect(res).toStrictEqual(testRes);
 });
 
@@ -260,10 +260,10 @@ test("ELSE-Plain-function-bug", async () => {
     ELSE InsertData( @unsubEvents, 
         'MobileNumber', @num, 'Message', [MSG(0).NOUNS], 'Status', 'Not Found' )  ENDIF ]%%`;
 
-    let testRes = [`
+    let testRes = `
 %%[
-    IF Length(@msg) == 0 THEN 
-        SET @response = 'You have unsubscribed and will no longer receive any messages.|' 
+    IF Length(@msg) == 0 THEN
+        SET @response = 'You have unsubscribed and will no longer receive any messages.|'
     ENDIF
 ELSE
     InsertData(
@@ -277,9 +277,31 @@ ELSE
     )
 ENDIF
 ]%%
-    `];
+`;
 
     const res = await beautifier.beautify(testCase);
-    expect(Array.isArray(res)).toBeTruthy();
+    expect(!Array.isArray(res)).toBeTruthy();
+    expect(res).toStrictEqual(testRes);
+});
+
+test("Comment block indenting bug fix", async () => {
+    let testCase = `%%[     v(@AMPscript)
+        /* comment */
+        
+        SET @val = 42
+        SET @word = "Hello World!"
+    ]%%`;
+
+    let testRes = `
+%%[
+    v(@AMPscript)
+    /* comment */
+    SET @val = 42
+    SET @word = "Hello World!"
+]%%
+`;
+
+    const res = await beautifier.beautify(testCase);
+    expect(!Array.isArray(res)).toBeTruthy();
     expect(res).toStrictEqual(testRes);
 });
