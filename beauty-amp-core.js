@@ -154,9 +154,11 @@ module.exports = {
    * Format code.
    * Lines are broken on "\n".
    * @param {Array|String} lines text of your code.
+   * @param {Boolean} [includeHtml=true] Include the HTML in beautifying (e.g. if HTML code is not format-able).
    * @return {Array|String} Formatted code. Array or string based on the initial input.
+   * @throws {SyntaxError} when error on HTML (Prettier) formatting.
    */
-  async beautify(lines) {
+  async beautify(lines, includeHtml = true) {
     let isArray = Array.isArray(lines);
     if (typeof(lines) === 'string') {
       lines = lines.split('\n');
@@ -165,8 +167,9 @@ module.exports = {
     }
 
     // run Prettier on HTML:
-    lines = await this.processHtml(lines);
-
+    if (includeHtml) {
+      lines = await this.processHtml(lines);
+    }
 
     // Cut blanks lines from start and end:
     logger.log("getCodeBlocks()");
@@ -214,10 +217,10 @@ module.exports = {
     }
 
     if (amp) {
-      setup.ampscript.capitalizeAndOrNot = amp.capitalizeAndOrNot === true ? true : false;
-      setup.ampscript.capitalizeIfFor = amp.capitalizeIfFor === true ? true : false;
-      setup.ampscript.capitalizeSet = amp.capitalizeSet === true ? true : false;
-      setup.ampscript.capitalizeVar = amp.capitalizeVar === true ? true : false;
+      setup.ampscript.capitalizeAndOrNot = amp.capitalizeAndOrNot === false ? false : true;
+      setup.ampscript.capitalizeIfFor = amp.capitalizeIfFor === false ? false : true;
+      setup.ampscript.capitalizeSet = amp.capitalizeSet === false ? false : true;
+      setup.ampscript.capitalizeVar = amp.capitalizeVar === false ? false : true;
       setup.ampscript.maxParametersPerLine = _.isInteger(amp.maxParametersPerLine) ? amp.maxParametersPerLine : 4;
     }
 

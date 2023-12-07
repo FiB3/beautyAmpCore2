@@ -347,3 +347,29 @@ test("Standalone method after keyword", async () => {
     expect(!Array.isArray(res)).toBeTruthy();
     expect(res).toStrictEqual(testRes);
 });
+
+// TODO: this won't work when "Next is present in variable"
+test("HTML Off", async () => {
+    let testCase = `<p>TEST</p>
+
+    </br>
+    %%[
+        IF EMPTY(@NxtJob) THEN
+            SET @NxtJob = 7
+        ENDIF
+    ]%%`;
+
+    let testRes = `<p>TEST</p>
+
+    </br>
+%%[
+    IF EMPTY(@NxtJob) THEN
+        SET @NxtJob = 7
+    ENDIF
+]%%
+`;
+
+    const res = await beautifier.beautify(testCase, false);
+    expect(!Array.isArray(res)).toBeTruthy();
+    expect(res).toStrictEqual(testRes);
+});

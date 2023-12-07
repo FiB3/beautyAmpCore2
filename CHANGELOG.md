@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.5] - 2023-12-07
+
+### Changed
+- new parameter on beautify to switch off HTML formatting (useful if HTML is broken)
+
 ## [0.4.4] - 2023-12-07
 
 ### Changed

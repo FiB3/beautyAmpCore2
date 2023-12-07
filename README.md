@@ -34,7 +34,9 @@ console.log(result); // returns code as an array
 ### beautify(lines)
 Format code. Lines are broken on `"\n"`.  
 `lines`: __Array|String__ - text of your code  
-`return`: __{Array|String}__ Formatted code. Array or string based on the initial input.
+`includeHtml` __Boolen=true__ Include the HTML in beautifying (e.g. if HTML code is not format-able).  
+`return`: __{Array|String}__ Formatted code. Array or string based on the initial input.  
+`throws`: Syntax Error if HTML cannot be formatted.
 
 ## Setup
 
