@@ -1,3 +1,6 @@
+const path = require('path');
+const fs = require('fs');
+
 const prettier = require('prettier');
 const _ = require('lodash');
 const CodeBlock = require('./src/codeBlock');
@@ -193,18 +196,34 @@ module.exports = {
    *    {string|Number} logLevel - Log level
    *    {Boolean = true} loggerOn - enable the logger
    */
-  setup(ampscript, editor, logs) {
-    if (ampscript) {
-      setup.ampscript.capitalizeAndOrNot = ampscript.capitalizeAndOrNot === true ? true : false;
-      setup.ampscript.capitalizeIfFor = ampscript.capitalizeIfFor === true ? true : false;
-      setup.ampscript.capitalizeSet = ampscript.capitalizeSet === true ? true : false;
-      setup.ampscript.capitalizeVar = ampscript.capitalizeVar === true ? true : false;
-      setup.ampscript.maxParametersPerLine = _.isInteger(ampscript.maxParametersPerLine) ? ampscript.maxParametersPerLine : 4;
+  setup(
+    ampscript = { capitalizeAndOrNot: true, capitalizeIfFor: true, capitalizeSet: true, capitalizeVar: true, maxParametersPerLine: true },
+    editor = { insertSpaces: true, tabSize: 4 },
+    logs
+  ) {
+    let setupJson = lookForSetupFile();
+    let amp = ampscript;
+    let edit = editor;
+    if (setupJson) {
+      if (setupJson.ampscript) {
+        amp = {...amp, ...setupJson.ampscript};
+      }
+      if (setupJson.editor) {
+        edit = {...edit, ...setupJson.editor};
+      }
     }
 
-    if (editor) {
-      setup.editor.insertSpaces = editor.insertSpaces === true ? true : false;
-      setup.editor.tabSize = _.isInteger(editor.tabSize) ? editor.tabSize : 4;
+    if (amp) {
+      setup.ampscript.capitalizeAndOrNot = amp.capitalizeAndOrNot === true ? true : false;
+      setup.ampscript.capitalizeIfFor = amp.capitalizeIfFor === true ? true : false;
+      setup.ampscript.capitalizeSet = amp.capitalizeSet === true ? true : false;
+      setup.ampscript.capitalizeVar = amp.capitalizeVar === true ? true : false;
+      setup.ampscript.maxParametersPerLine = _.isInteger(amp.maxParametersPerLine) ? amp.maxParametersPerLine : 4;
+    }
+
+    if (edit) {
+      setup.editor.insertSpaces = edit.insertSpaces === false ? false : true;
+      setup.editor.tabSize = _.isInteger(edit.tabSize) ? edit.tabSize : 4;
 
       setup.htmlOptions.useTabs = !setup.editor.insertSpaces;
       setup.htmlOptions.tabWidth = setup.editor.tabSize;
@@ -228,4 +247,16 @@ async function prettifyHtml(code) {
   let x = await prettier.format(code, setup.htmlOptions);
   logger.log(`prettifyHtml`, typeof(x));
   return x;
+}
+
+function lookForSetupFile() {
+  try {
+    const path = require('path');
+    const setupPath = path.resolve(process.cwd(), './.beautyamp.json');
+
+    let rawdata = fs.readFileSync(setupPath);
+    return JSON.parse(rawdata);
+  } catch(err) {
+    return false;
+  }
 }

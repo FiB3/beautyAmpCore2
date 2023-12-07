@@ -1,7 +1,6 @@
 const _ = require('lodash');
 
 const formatters = require('./formatters');
-const Logger = require("./logger");
 
 let logger;
 

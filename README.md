@@ -59,3 +59,21 @@ const logs = {
 
 beautifier.setup(ampscript, editor, logs);
 ```
+
+A new experimental feature allows to use a setup file in your project's folder: `.beautyamp.json`:
+
+```json
+{
+	"ampscript": {
+		"capitalizeAndOrNot": true,
+		"capitalizeIfFor": true,
+		"capitalizeSet": true,
+		"capitalizeVar": true,
+		"maxParametersPerLine": 4
+	},
+	"editor": {
+		"insertSpaces": true,
+		"tabSize": 2
+	}
+}
+```
