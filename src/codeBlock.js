@@ -192,7 +192,8 @@ module.exports = class CodeBlock {
 
   formatMethodLine(line, i) {
 		logger.log(`${i}:formatMethodLine("${line}")`);
-    const methodsDetect = /(\%\%\[[\t\ ]*|[\t\ ]*|set[\t\ ]+@\w+[\t\ ]*=[\t\ ]*)(\w+\(.*\))/gi;
+    const methodsDetect = /(\%\%\[|THEN|ELSE|ENDIF|DO|NEXT|set[\t\ ]+@\w+[\t\ ]*=|)[\t\ ]*(\w+\(.*\))/gi;
+    // const methodsDetect = /(\%\%\[[\t\ ]*|[\t\ ]*|set[\t\ ]+@\w+[\t\ ]*=[\t\ ]*)(\w+\(.*\))/gi;
     // const methodsDetect = /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\((?:[^)(]|\((?:[^)(]|\([^)(]*\))*\))*\)/gi;
 
     if (methodsDetect.test(line)) {
@@ -201,7 +202,9 @@ module.exports = class CodeBlock {
         let method = _this.formatMethod(p2, 0);
         // logger.log(`${i}: ${method}`);
         // return `${p1}${method}`;
-				return p1.includes('%%[') ? `${p1}\n${method}` : `${p1}${method}`; 
+				return ['\%\%\[', 'THEN', 'ELSE', 'ENDIF', 'DO', 'NEXT'].includes(p1.trim())
+            ? `${p1}\n${method}`
+            : `${p1} ${method}`; 
       });
     }
 		logger.log(`${i}:formatMethodLine(): ${line}`);

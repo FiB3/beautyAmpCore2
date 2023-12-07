@@ -284,6 +284,7 @@ ENDIF
     expect(res).toStrictEqual(testRes);
 });
 
+
 test("Comment block indenting bug fix", async () => {
     let testCase = `%%[     v(@AMPscript)
         /* comment */
@@ -298,6 +299,47 @@ test("Comment block indenting bug fix", async () => {
     /* comment */
     SET @val = 42
     SET @word = "Hello World!"
+]%%
+`;
+
+    const res = await beautifier.beautify(testCase);
+    expect(!Array.isArray(res)).toBeTruthy();
+    expect(res).toStrictEqual(testRes);
+});
+
+
+test("Standalone method after keyword", async () => {
+    let testCase = `%%[
+        var @x, @i	
+        /**
+                    * comment 1
+                    * example 2
+            */
+            IF @title == 'Hello World!' THEN
+                OutputLine(Concat('Hello ', 'World!'))
+            ENDIF
+    
+            FOR @i to 3 DO
+            OutputLine(Concat('Hello', ' ', 'World!'))
+    
+            SET @x = 'stuff'
+            NEXT @i
+    ]%%`;
+
+    let testRes = `
+%%[
+    VAR @x, @i
+    /**
+     * comment 1
+     * example 2
+     */
+    IF @title == 'Hello World!' THEN
+        OutputLine(Concat('Hello ', 'World!'))
+    ENDIF
+    FOR @I TO 3 DO
+        OutputLine(Concat('Hello', ' ', 'World!'))
+        SET @x = 'stuff'
+    NEXT @i
 ]%%
 `;
 

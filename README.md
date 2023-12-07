@@ -38,14 +38,13 @@ Format code. Lines are broken on `"\n"`.
 
 ## Setup
 
-Defaults:
+You can set the extension as following.
 ``` javascript
-// immutable at the moment:
 const ampscript = {
-  capitalizeAndOrNot:true,
-  capitalizeIfFor:true,
-  capitalizeSet:true,
-  capitalizeVar:true,
+  capitalizeAndOrNot: true,
+  capitalizeIfFor: true,
+  capitalizeSet: true,
+  capitalizeVar: true,
   maxParametersPerLine: 4
 };
 
@@ -55,7 +54,7 @@ const editor = {
 };
 
 const logs = {
-  loggerOn: true // <= disable logging
+  loggerOn: false // <= disable logging
 };
 
 beautifier.setup(ampscript, editor, logs);

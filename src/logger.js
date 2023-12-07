@@ -14,15 +14,13 @@ module.exports = class Logger {
   /**
    * Setup the logger.
    * @param {Object} setup
-   *    {string|Number} logLevel - Log level
-   *    {Boolean = true} loggerOn - enable the logger
+   *    {string} [logLevel=INFO] - Log level
+   *    {Boolean} [loggerOn=false] loggerOn - enable the logger
    */
-  setup(setup) {
-    setup = setup ? setup : {};
-
-    this.on = setup.loggerOn === false ? false : true;
+  setup(setup = { loggerOn: false, logLevel: 'INFO' }) {
+    this.on = setup.loggerOn;
     this.onValue = this.on;
-    this.level = typeof(setup.logLevel) === 'string' ? setup.logLevel : 4;
+    this.level = typeof(setup.logLevel) === 'string' ? setup.logLevel : 'INFO';
   }
 
   enable() {
