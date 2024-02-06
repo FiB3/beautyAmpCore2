@@ -20,7 +20,7 @@
     "type": "git",
     "url": "git+https://github.com/FiB3/beautyAmpCore2.git"
   },
-  "homepage": "https://github.com/FiB3/beautyAmpCore2",
+  "homepage": "https://fib3.vercel.app/",
   "devDependencies": {
     "jest": "^29.7.0"
   }
