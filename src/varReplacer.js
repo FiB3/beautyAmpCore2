@@ -20,27 +20,44 @@ module.exports = class VarReplacer {
 	 * @return {String} text with hidden variables.
 	 */
 	hideVars(scriptText) {
-		this.findVars(scriptText);
-		this.findAttributeStrings(scriptText);
-		this.findSystemStrings(scriptText);
+		let script = this.replaceStrings(scriptText);
+		script = this.replaceVars(script);
+		script = this.replaceAttributeStrings(script);
+		script = this.replaceSystemStrings(script);
 
-
-		this.replacedVarsView = {};
-		return scriptText;
+		return script;
 	}
 
 	/**
-	 * Replace all variables in the script text back.
+	 * Replace all variables back to their original names.
+	 * @param {String} hiddenScriptText text of your code.
+	 * @returns {String} text with original variables.
 	 */
-	showVars(scriptText) {
-		return scriptText;
+	showVars(hiddenScriptText) {
+		for (let key in this.replacedVarsView) {
+			let value = this.replacedVarsView[key];
+			let regex = new RegExp(_.escapeRegExp(key), 'g');
+			hiddenScriptText = hiddenScriptText.replace(regex, value);
+		}
+		return hiddenScriptText;	
+	}
+
+	/**
+	 * Find all strings in the script text.
+	 * Adds to the replacedVarsView object.
+	 * @param {String} scriptText text of your code.
+	 * @return {String} text with hidden variables. 
+	 */
+	replaceStrings(scriptText) {
+    const regexToUse = /(".*?"|'.*?')/gmi;
+    return this._replaceStuff(scriptText, regexToUse);
 	}
 
 	/**
 	 * Find all (AMPscript) variables in the script text.
 	 * Adds to the replacedVarsView object.
 	 * @param {String} scriptText text of your code.
-	 * @return {Object} 
+	 * @return {String} text with hidden variables. 
 	 */
 	replaceVars(scriptText) {
     const regexToUse = /@[a-z0-9]+/gmi;
@@ -52,7 +69,7 @@ module.exports = class VarReplacer {
 	 * Inline strings (%%string%% is not required).
 	 * Adds to the replacedVarsView object.
 	 * @param {String} scriptText text of your code.
-	 * @return {Object} object with simplified names as values and the original names as values.
+	 * @return {String} text with hidden variables. 
 	 */
 	replaceAttributeStrings(scriptText) {
 		const regexToUse = /\[[a-z0-9\ \-]+?\]/gmi;
@@ -64,7 +81,7 @@ module.exports = class VarReplacer {
 	 * Adds to the replacedVarsView object.
 	 * Currently only those that start with an underscore are supported - identified those like: `_UTCOffset`, `_ModifiedBy`, `_ModifiedDate`
 	 * @param {String} scriptText text of your code.
-	 * @return {Object} object with simplified names as values and the original names as values.
+	 * @return {String} text with hidden variables.
 	 */
 	replaceSystemStrings(scriptText) {
 		const regexToUse = /_[a-z]+/gmi;
@@ -78,26 +95,27 @@ module.exports = class VarReplacer {
 	 * @return {string} script text with hidden variables.
 	 */
 	_replaceStuff(scriptText, regexToUse) {
+		logger.log(`----- ${regexToUse} -----\n`);
 		let match;
 		let matches = new Map();
-		let generator = this.getNextVarName();
 
 		while ((match = regexToUse.exec(scriptText)) !== null) {
-				let varName = match[0];
-				let varNameLower = varName.toLowerCase();
-				if (!matches.has(varNameLower)) {
-						let simplifiedName = generator.next().value;
-						matches.set(varNameLower, {original: varName, simplified: simplifiedName});
-				}
+			let varName = match[0];
+			let varNameLower = varName.toLowerCase();
+			if (!matches.has(varNameLower)) {
+				let simplifiedName = this.varGenerator.next().value;
+				matches.set(varNameLower, {original: varName, simplified: simplifiedName});
+			}
 		}
 
 		// Convert the Map to an array of objects, then sort them by their first appearance in the script text
 		let sortedMatches = Array.from(matches.values()).sort((a, b) => scriptText.indexOf(a.original) - scriptText.indexOf(b.original));
 
-		// Convert the sorted array back to an object with simplified names as keys and original names as values
 		for (let match of sortedMatches) {
-				this.replacedVarsView[match.simplified] = match.original;
+			this.replacedVarsView[match.simplified] = match.original;
 		}
+
+		sortedMatches.sort((a, b) => b.original.length - a.original.length);
 		logger.log(`replacedVarsView:`, this.replacedVarsView);
 
 		// Replace the original variable names in the script text with the simplified names
@@ -107,7 +125,7 @@ module.exports = class VarReplacer {
 				logger.log(`regex for: ${match}:`, regex);
 				modifiedScriptText = modifiedScriptText.replace(regex, match.simplified);
 		}
-
+		logger.log(`>>>>>>>>>>\n`, modifiedScriptText, `\n<<<<<<<<<<<<`);
 		return modifiedScriptText;
 	}
 
@@ -121,7 +139,7 @@ module.exports = class VarReplacer {
 				index = 0;
 				number++;
 			}
-			yield `${vars[index++]}${number}`;
+			yield `#${vars[index++]}${number}#`;
 		}
 	}
 };
