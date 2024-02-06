@@ -135,7 +135,7 @@ SET @offset = #b0#`;
   });
 
   describe('hideVars', () => {
-    it('should hide values from the sript text', () => {
+    it('should hide values from the script text', () => {
       const scriptText = `
 @Title = IIF(EMPTY(@Title))
 SET @Title = IIF(EMPTY(@Title) OR @Title=="\'Without title" OR @Title==Concat(
@@ -149,16 +149,16 @@ SET @NextKey = IIF(EMPTY(@NextKey), 7, _UTCOffset)
 v(@AMPscript)
 `;
 			const expectedRes = `
-#g0# = IIF(EMPTY(#g0#))
-SET #g0# = IIF(EMPTY(#g0#) OR #g0#==#a0# OR #g0#==Concat(
-		#b0#, #h0#))
-If ( #i0# == #c0# or #i0#== #n0# ) then 
-SET #j0# = #d0#
+@g0 = IIF(EMPTY(@g0))
+SET @g0 = IIF(EMPTY(@g0) OR @g0==@a0 OR @g0==Concat(
+		@b0, @h0))
+If ( @i0 == @c0 or @i0== @n0 ) then 
+SET @j0 = @d0
 ENDIF
-IIF(EMPTY(#n0#) and #o0# == #e0#, #f0#, #n0#)
-SET #k0# = #f0#
-SET #l0# = IIF(EMPTY(#l0#), 7, #p0#)
-v(#m0#)
+IIF(EMPTY(@n0) and @o0 == @e0, @f0, @n0)
+SET @k0 = @f0
+SET @l0 = IIF(EMPTY(@l0), 7, @p0)
+v(@m0)
 `;
 
       const result = varReplacer.hideVars(scriptText);
@@ -206,16 +206,16 @@ v(#m0#)
 			};
 
       const scriptText = `
-			#g0# = IIF(EMPTY(#g0#))
-			SET #g0# = IIF(EMPTY(#g0#) OR #g0#==#a0# OR #g0#==Concat(
-					#b0#, #h0#))
-			If ( #i0# == #c0# or #i0#== #n0# ) then 
-			SET #j0# = #d0#
+			@g0 = IIF(EMPTY(@g0))
+			SET @g0 = IIF(EMPTY(@g0) OR @g0==@a0 OR @g0==Concat(
+					@b0, @h0))
+			If ( @i0 == @c0 or @i0== @n0 ) then 
+			SET @j0 = @d0
 			ENDIF
-			IIF(EMPTY(#n0#) and #o0# == #e0#, #f0#, #n0#)
-			SET #k0# = #f0#
-			SET #l0# = IIF(EMPTY(#l0#), 7, #p0#)
-			v(#m0#)
+			IIF(EMPTY(@n0) and @o0 == @e0, @f0, @n0)
+			SET @k0 = @f0
+			SET @l0 = IIF(EMPTY(@l0), 7, @p0)
+			v(@m0)
 			`;
 
 			const expected = `

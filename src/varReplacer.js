@@ -1,13 +1,11 @@
 const _ = require('lodash');
 
-let logger;
-
 /**
  * Handles hiding any AMPscript variables from the code - to avoid any conflicts with keywords.
  */
 module.exports = class VarReplacer {
 	constructor(loggerInstance = { log: () => {} }) {
-		logger = loggerInstance;
+		this.logger = loggerInstance;
 
 		this.varGenerator = this.getNextVarName();
 		// object with simplified names as values and the original variable names as values.
@@ -25,6 +23,13 @@ module.exports = class VarReplacer {
 		script = this.replaceAttributeStrings(script);
 		script = this.replaceSystemStrings(script);
 
+		// run through all keys in replacedVarsView and change all in script to use keyToTempVar() expression:
+		for (let key in this.replacedVarsView) {
+			let value = this.keyToTempVar(key);
+			let regex = new RegExp(_.escapeRegExp(key), 'g');
+			script = script.replace(regex, value);
+		}
+
 		return script;
 	}
 
@@ -36,10 +41,10 @@ module.exports = class VarReplacer {
 	showVars(hiddenScriptText) {
 		for (let key in this.replacedVarsView) {
 			let value = this.replacedVarsView[key];
-			let regex = new RegExp(_.escapeRegExp(key), 'g');
+			let regex = new RegExp(_.escapeRegExp(this.keyToTempVar(key)), 'g');
 			hiddenScriptText = hiddenScriptText.replace(regex, value);
 		}
-		return hiddenScriptText;	
+		return hiddenScriptText;
 	}
 
 	/**
@@ -95,7 +100,7 @@ module.exports = class VarReplacer {
 	 * @return {string} script text with hidden variables.
 	 */
 	_replaceStuff(scriptText, regexToUse) {
-		logger.log(`----- ${regexToUse} -----\n`);
+		this.logger.log(`----- ${regexToUse} -----\n`);
 		let match;
 		let matches = new Map();
 
@@ -116,19 +121,28 @@ module.exports = class VarReplacer {
 		}
 
 		sortedMatches.sort((a, b) => b.original.length - a.original.length);
-		logger.log(`replacedVarsView:`, this.replacedVarsView);
+		this.logger.log(`replacedVarsView:`, this.replacedVarsView);
 
 		// Replace the original variable names in the script text with the simplified names
 		let modifiedScriptText = scriptText;
 		for (let match of sortedMatches) {
 				let regex = new RegExp(_.escapeRegExp(match.original), 'gi');
-				logger.log(`regex for: ${match}:`, regex);
+				this.logger.log(`regex for: ${match}:`, regex);
 				modifiedScriptText = modifiedScriptText.replace(regex, match.simplified);
 		}
-		logger.log(`>>>>>>>>>>\n`, modifiedScriptText, `\n<<<<<<<<<<<<`);
+		this.logger.log(`>>>>>>>>>>\n`, modifiedScriptText, `\n<<<<<<<<<<<<`);
 		return modifiedScriptText;
 	}
 
+	keyToTempVar(input) {
+		let output = input.replace(/#(\w\d)#/g, "@$1");
+		return output;
+	}
+
+	/**
+	 * Generator for variable names.
+	 * @returns {String} simplified variable name.
+	 */
 	*getNextVarName() {
 		let vars = 'abcdefghijklmnopqrstuvwxyz'.split('');
 		let index = 0;

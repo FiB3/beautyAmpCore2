@@ -1,12 +1,14 @@
 const _ = require('lodash');
 
+const VarReplacer = require('./varReplacer');
 const formatters = require('./formatters');
 
 let logger;
 
 module.exports = class CodeBlock {
-  constructor(lines, isAmp, delimeter, setup, editorSetup, loggerRef) {
+  constructor(lines, isAmp, delimeter, setup, editorSetup, loggerRef = { log: () => {} }) {
 		logger = loggerRef;
+    logger.log(`=== CodeBlock() ===`);
 
     this.delimeter = delimeter === undefined ? '\n' : delimeter;
 
@@ -34,8 +36,12 @@ module.exports = class CodeBlock {
 
     this.maxParametersPerLine = typeof setup.maxParametersPerLine === 'number' ? setup.maxParametersPerLine : 20;
 
+    this.replacer = new VarReplacer(logger);
+
     // start processing:
     if (this.isAmp) {
+      this.lines = this.replacer.hideVars(this.lines);
+
       this.makeOneLiner();
       this.checkForOneliners();
 
@@ -46,9 +52,9 @@ module.exports = class CodeBlock {
         // for multi-line blocks:
         this.createNewLines(); // makes the one-liner into a list again!
 
-        const lines = typeof this.lines === 'string' ? [this.lines] : this.lines;
+        const codeLines = typeof this.lines === 'string' ? [this.lines] : this.lines;
 
-        lines.forEach((line, i, lines) => {
+        codeLines.forEach((line, i, codeLines) => {
           let lineTemp = line;
           lineTemp = this.formatAssignment(lineTemp);
           lineTemp = this.formatVarDeclaration(lineTemp, i);
@@ -59,14 +65,14 @@ module.exports = class CodeBlock {
 
           lineTemp = this.formatMethodLine(lineTemp, i);
           lineTemp = this.runStatements(lineTemp, i);
-          lines[i] = lineTemp;
+          codeLines[i] = lineTemp;
         }, this);
-
       }
     } else {
       // checks on non-AMP-blocks (HTML/output AMP):
       this.checkForOutputAmpBlock();
     }
+    logger.log(`=== CodeBlock() END ===`);
   }
 
   formatForDeclaration(line, i) {
@@ -101,8 +107,10 @@ module.exports = class CodeBlock {
     let _this = this;
     if (declaration.test(iterator)) {
       return iterator.replace(declaration, function (match, p1, p2, p3) {
+        logger.log(`formatIterationDeclaration(): ${match}, ${p1}, ${p2}, ${p3}.`);
         const toWord = _this.capitalizeIfFor ? p2.toUpperCase() : p2.toLowerCase();
-        return _this.formatFor(p1, toWord, p3);
+    
+        return `${p1} ${toWord} ${p3}`;
       });
     }
     return iterator;
@@ -151,23 +159,23 @@ module.exports = class CodeBlock {
     }
   }
 
+  /**
+   * Format variable declaration line.
+   * @param {string} line 
+   * @param {*} i placeholder
+   * @returns 
+   */
   formatVarDeclaration(line, i) {
     const declarationCheck = /^VAR\s+(.*)/i;
-
-    let varKeyword = 'var';
-    if (this.capitalizeVar) {
-      varKeyword = 'VAR';
-    }
-
+  
+    const varKeyword = this.capitalizeVar ? 'VAR' : 'var';
+  
     if (declarationCheck.test(line)) {
       logger.log(`VAR: "${line}"`);
-      let paramsStr = line.replace(declarationCheck, '$1');
-      let vars = paramsStr.split(',');
-      let params = [];
-      vars.forEach((param) => {
-        params.push(param.trim());
-      });
-      return varKeyword + ' ' + params.join(', ');
+      const paramsStr = line.replace(declarationCheck, '$1');
+      const vars = paramsStr.split(',');
+      const params = vars.map(param => param.trim());
+      return `${varKeyword} ${params.join(', ')}`;
     }
     return line;
   }
@@ -272,21 +280,6 @@ module.exports = class CodeBlock {
     }
     return line;
   }
-
-	// formatElseAndEndifLine(line, i) {
-  //   const elseOrEndifCheck = /[\t\ ]*(ENDIF|ELSE)[\t\ ]*/gi; // original
-
-  //   let _this = this;
-  //   if (elseOrEndifCheck.test(line)) {
-  //     logger.log(`formatElseAndEndifLine("${line}"):`);
-  //     let lineRes = line.replace(elseOrEndifCheck, function (match, p1) {
-  //       return _this.formatElseAndEndif(p1);
-  //     });
-  //     logger.log(`formatElseAndEndifLine() => "${lineRes}"`);
-	// 		return lineRes;
-  //   }
-  //   return line;
-  // }
 
   formatElseAndEndifLine(line, i) {
     const elseOrEndifFunctionCheck = /[\t\ ]*(ENDIF|ELSE)[\t\ ]*(\S+\()/gi;
@@ -549,8 +542,6 @@ module.exports = class CodeBlock {
     this.lines = newLines;
   }
 
-
-
   /**
    * Get line indentation string (whitespaces).
    * Block indentation is obtained automaticaly from block.
@@ -566,6 +557,10 @@ module.exports = class CodeBlock {
     return this.indentator.repeat(finalIndent);
   }
 
+  /**
+   * Make one-liner from multi-line block.
+   * Works with this.lines.
+   */
   makeOneLiner() {
     const commentBreaker = /(\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->)/gi;
     let parts = this.lines.split(commentBreaker);
@@ -587,12 +582,6 @@ module.exports = class CodeBlock {
     } else {
       this.lines = this.lines.join(' ');
     }
-    // if (typeof this.lines === 'string') {
-    //   let parts = this.lines.split(this.delimeter);
-    //   this.lines = parts.join(' ');
-    // } else {
-    //   this.lines = this.lines.join(' ');
-    // }
   }
 
   // expects separated lines, returns integer with the change of indentation (nesting)
@@ -739,6 +728,10 @@ module.exports = class CodeBlock {
       this.lines = this.getIndentation() + this.lines;
     }
     // this.lines = `${this.nestModifier}/${this.nestLevel} => ${this.lines}`;
+
+    if (this.isAmp) {
+      this.lines = this.replacer.showVars(this.lines);
+    }
 
     return this.lines;
   }

@@ -336,7 +336,7 @@ test("Standalone method after keyword", async () => {
     IF @title == 'Hello World!' THEN
         OutputLine(Concat('Hello ', 'World!'))
     ENDIF
-    FOR @I TO 3 DO
+    FOR @i TO 3 DO
         OutputLine(Concat('Hello', ' ', 'World!'))
         SET @x = 'stuff'
     NEXT @i
@@ -374,27 +374,27 @@ test("HTML Off", async () => {
     expect(res).toStrictEqual(testRes);
 });
 
-// test("Next-in-variable-fix", async () => {
-//     let testCase = `<p>TEST</p>
+test("Next-in-variable-fix", async () => {
+    let testCase = `<p>TEST</p>
 
-//     </br>
-//     %%[
-//         IF EMPTY(@NextJob) THEN
-//             SET @NextJob = 7
-//         ENDIF
-//     ]%%`;
+    </br>
+    %%[
+        IF EMPTY(@NextJob) THEN
+            SET @NextJob = 7
+        ENDIF
+    ]%%`;
 
-//     let testRes = `<p>TEST</p>
+    let testRes = `<p>TEST</p>
 
-//     </br>
-// %%[
-//     IF EMPTY(@NextJob) THEN
-//         SET @NextJob = 7
-//     ENDIF
-// ]%%
-// `;
+    </br>
+%%[
+    IF EMPTY(@NextJob) THEN
+        SET @NextJob = 7
+    ENDIF
+]%%
+`;
 
-//     const res = await beautifier.beautify(testCase, false);
-//     expect(!Array.isArray(res)).toBeTruthy();
-//     expect(res).toStrictEqual(testRes);
-// });
+    const res = await beautifier.beautify(testCase, false);
+    expect(!Array.isArray(res)).toBeTruthy();
+    expect(res).toStrictEqual(testRes);
+});
