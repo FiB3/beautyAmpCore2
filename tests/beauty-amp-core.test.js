@@ -373,3 +373,28 @@ test("HTML Off", async () => {
     expect(!Array.isArray(res)).toBeTruthy();
     expect(res).toStrictEqual(testRes);
 });
+
+// test("Next-in-variable-fix", async () => {
+//     let testCase = `<p>TEST</p>
+
+//     </br>
+//     %%[
+//         IF EMPTY(@NextJob) THEN
+//             SET @NextJob = 7
+//         ENDIF
+//     ]%%`;
+
+//     let testRes = `<p>TEST</p>
+
+//     </br>
+// %%[
+//     IF EMPTY(@NextJob) THEN
+//         SET @NextJob = 7
+//     ENDIF
+// ]%%
+// `;
+
+//     const res = await beautifier.beautify(testCase, false);
+//     expect(!Array.isArray(res)).toBeTruthy();
+//     expect(res).toStrictEqual(testRes);
+// });

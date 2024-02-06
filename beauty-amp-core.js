@@ -254,7 +254,6 @@ async function prettifyHtml(code) {
 
 function lookForSetupFile() {
   try {
-    const path = require('path');
     const setupPath = path.resolve(process.cwd(), './.beautyamp.json');
 
     let rawdata = fs.readFileSync(setupPath);

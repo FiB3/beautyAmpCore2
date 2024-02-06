@@ -7,17 +7,11 @@ module.exports = {
    * @param {String} text function parameters without the opening/closing parenthesis
    */
   splitParameters: function (text) {
-    // console.log(text);
     let delimeter = ',';
     let splitted = [];
-
     let opener = ''; // char which has opened the "non-mathing group"
     let closer = '';
-    let openers = {
-      "'": `'`,
-      '"': `"`,
-      '(': ')'
-    };
+    let openers = { "'": `'`, '"': `"`, '(': ')' };
     let nestableOpeners = ['('];
     let counted = 0;
     let word = '';
@@ -28,32 +22,27 @@ module.exports = {
       let p_ch = i > 0 ? chars[i - 1] : '';
 
       if (ch === delimeter && opener === '') {
-        // SPLIT-time!
         splitted.push(word);
         word = '';
       } else {
-        // console.log(`${i}: ${ch}, o:${opener}, c:${closer}, counted:${counted}`);
         word += ch;
 
         if (ch in openers && opener === '' && p_ch !== '\\') {
-          // open NON-SPLITtable context:
           opener = ch;
           closer = openers[ch];
           counted++;
         } else if (ch === opener && nestableOpeners.includes(opener) && p_ch !== '\\') {
-          // console.log('===> 2');
           counted++;
         } else if (ch === closer && p_ch !== '\\') {
-          // non-splittable context:
           counted--;
           if (counted === 0) {
-            // close hte non-splittable context
             opener = '';
             closer = '';
           }
         }
       }
     });
+
     if (word !== '') {
       splitted.push(word);
     }
@@ -67,8 +56,8 @@ module.exports = {
    * @param {string} methodStr string containing method (can contain the surrounding text - in case of IFF function, where is it e.g. statement)
    * @return {array} Array consisting of three items: ['...methodName(', 'parametersString', ')...']
    */
-  splitMethodParams: function (methodString) {
-    methodStr = methodString.trim();
+  splitMethodParams: function (methodStr) {
+    methodStr = methodStr.trim();
     const parenthesisStart = methodStr.indexOf("(") + 1;
     let parenthesisEnd = methodStr.length;
 
@@ -79,27 +68,19 @@ module.exports = {
       let ch = chars[i];
       let p_ch = i > 0 ? chars[i - 1] : '';
       if ((ch === "'" || ch === '"') && p_ch !== '\\') {
-        if (ch === stringOpener) {
-          stringOpener = ''; // exiting string
-        } else {
-          stringOpener = ch; // entering string
-        }
+        stringOpener = ch === stringOpener ? '' : ch;
       } else if (ch === '(') {
         opened++;
-      } else if (ch === ')') {
-        opened--;
-        if (opened === 0) {
-          parenthesisEnd = i;
-          break;
-        }
-      } // else not needed
+      } else if (ch === ')' && --opened === 0) {
+        parenthesisEnd = i;
+        break;
+      }
     }
 
     let methodEnd = methodStr.substring(parenthesisEnd);
     let parameters = methodStr.substring(parenthesisStart, parenthesisEnd);
     let methodStart = methodStr.substring(0, parenthesisStart);
 
-    // console.log(`${parenthesisStart}:${parenthesisEnd}: ${[methodStart, parameters, methodEnd].join('_|_')}`);
     return [methodStart, parameters, methodEnd];
   }
 }
