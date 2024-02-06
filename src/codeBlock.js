@@ -6,132 +6,124 @@ const formatters = require('./formatters');
 let logger;
 
 module.exports = class CodeBlock {
-  constructor(lines, isAmp, delimeter, setup, editorSetup, loggerRef = { log: () => {} }) {
-		logger = loggerRef;
+
+  constructor(lines, isAmp, delimeter = '\n', setup = {}, { insertSpaces, tabSize } = {}, loggerRef = { log: () => {} }) {
+    logger = loggerRef;
     logger.log(`=== CodeBlock() ===`);
-
-    this.delimeter = delimeter === undefined ? '\n' : delimeter;
-
-    this.indentator = editorSetup.insertSpaces ? ' '.repeat(editorSetup.tabSize) : '\t';
-    logger.log(`Indentation Sign: "${this.indentator}". Use Spaces: ${editorSetup.insertSpaces}, width: ${editorSetup.tabSize}`);
-    // this.indentator = indentationSign === undefined ? '\t' : indentationSign;
+  
+    this.delimeter = delimeter;
+    this.indentator = insertSpaces ? ' '.repeat(tabSize) : '\t';
+    logger.log(`Indentation Sign: "${this.indentator}". Use Spaces: ${insertSpaces}, width: ${tabSize}`);
     this.indentMarker = '=>';
-
-		this.pureLines = lines;
+  
+    this.pureLines = lines;
     this.lines = lines;
-    // following two cannot be true at the same time:
-    this.isAmp = isAmp; // any %%[ ]%% block
-    this.isOutputAmp = false; // any %%= =%% block
-
-    this.isOneliner = false; // defaults
-
-    this.nestLevel = 0; // defaults
-    this.nestModifier = 0; // is this (one-line) block increasing/decreasing the nest level?
-
-    // logger.log('setup: ', setup);
-    this.capitalizeSet = setup.capitalizeSet;
-    this.capitalizeVar = setup.capitalizeVar;
-    this.capitalizeAndOrNot = setup.capitalizeAndOrNot;
-    this.capitalizeIfFor = setup.capitalizeIfFor;
-
-    this.maxParametersPerLine = typeof setup.maxParametersPerLine === 'number' ? setup.maxParametersPerLine : 20;
-
+    this.isAmp = isAmp;
+    this.isOutputAmp = false;
+    this.isOneliner = false;
+    this.nestLevel = 0;
+    this.nestModifier = 0;
+  
+    const { capitalizeSet, capitalizeVar, capitalizeAndOrNot, capitalizeIfFor, maxParametersPerLine = 20 } = setup;
+    this.capitalizeSet = capitalizeSet;
+    this.capitalizeVar = capitalizeVar;
+    this.capitalizeAndOrNot = capitalizeAndOrNot;
+    this.capitalizeIfFor = capitalizeIfFor;
+    this.maxParametersPerLine = maxParametersPerLine;
+  
     this.replacer = new VarReplacer(logger);
-
-    // start processing:
+  
     if (this.isAmp) {
       this.lines = this.replacer.hideVars(this.lines);
-
       this.makeOneLiner();
       this.checkForOneliners();
-
+  
       if (this.isOneliner) {
-        // oneliner:
         this.formatOneLiner();
       } else {
-        // for multi-line blocks:
-        this.createNewLines(); // makes the one-liner into a list again!
-
+        this.createNewLines();
         const codeLines = typeof this.lines === 'string' ? [this.lines] : this.lines;
-
-        codeLines.forEach((line, i, codeLines) => {
-          let lineTemp = line;
-          lineTemp = this.formatAssignment(lineTemp);
-          lineTemp = this.formatVarDeclaration(lineTemp, i);
-          lineTemp = this.formatElseAndEndifLine(lineTemp, i);
-					logger.log(`formatElseAndEndifLine() => `, lineTemp);
-          lineTemp = this.formatForDeclaration(lineTemp, i);
-          lineTemp = this.formatForNext(lineTemp, i);
-
-          lineTemp = this.formatMethodLine(lineTemp, i);
-          lineTemp = this.runStatements(lineTemp, i);
-          codeLines[i] = lineTemp;
-        }, this);
+  
+        this.lines = codeLines.map((line, i) => {
+          line = this.formatAssignment(line);
+          line = this.formatVarDeclaration(line, i);
+          line = this.formatElseAndEndifLine(line, i);
+          logger.log(`formatElseAndEndifLine() => `, line);
+          line = this.formatForDeclaration(line, i);
+          line = this.formatForNext(line, i);
+          line = this.formatMethodLine(line, i);
+          return this.runStatements(line, i);
+        });
       }
     } else {
-      // checks on non-AMP-blocks (HTML/output AMP):
       this.checkForOutputAmpBlock();
     }
     logger.log(`=== CodeBlock() END ===`);
   }
 
-  formatForDeclaration(line, i) {
+  /**
+   * Format FOR declaration line (main to call).
+   * @param {string} line
+   * @param {*} i
+   * @returns {string}
+   */
+  formatForDeclaration(line) {
     const forDeclaration = /(FOR)\s+(.*)\s+(DO)/gi;
-
-    let _this = this;
+  
     if (forDeclaration.test(line)) {
-      return line.replace(forDeclaration, function (match, p1, p2, p3) {
-        return _this.formatFor(p1, p2, p3);
-      });
+      return line.replace(forDeclaration, (match, p1, p2, p3) => this.formatFor(p1, p2, p3));
     }
     return line;
   }
-
+  
+  /**
+   * Format FOR iteration line.
+   * @param {string} forWord
+   * @param {string} iterator
+   * @param {string} doWord
+   * @returns {string}
+   */
   formatFor(forWord, iterator, doWord) {
-    if (this.capitalizeIfFor) {
-      forWord = forWord.toUpperCase();
-      doWord = doWord.toUpperCase();
-    } else {
-      forWord = forWord.toLowerCase();
-      doWord = doWord.toLowerCase();
-    }
-    // TODO: format the iterator:
+    forWord = this.capitalizeIfFor ? forWord.toUpperCase() : forWord.toLowerCase();
+    doWord = this.capitalizeIfFor ? doWord.toUpperCase() : doWord.toLowerCase();
     iterator = this.formatIterationDeclaration(iterator);
-
+  
     return `${forWord} ${iterator} ${doWord}`;
   }
-
+  
+  /**
+   * Format for iteration declaration line.
+   * @param {string} iterator line of code
+   * @returns {string}
+   */
   formatIterationDeclaration(iterator) {
     const declaration = /(.*)[\t\ ]+(to)[\t\ ]+(.*)/gi;
-
-    let _this = this;
+  
     if (declaration.test(iterator)) {
-      return iterator.replace(declaration, function (match, p1, p2, p3) {
+      return iterator.replace(declaration, (match, p1, p2, p3) => {
         logger.log(`formatIterationDeclaration(): ${match}, ${p1}, ${p2}, ${p3}.`);
-        const toWord = _this.capitalizeIfFor ? p2.toUpperCase() : p2.toLowerCase();
-    
+        const toWord = this.capitalizeIfFor ? p2.toUpperCase() : p2.toLowerCase();
+      
         return `${p1} ${toWord} ${p3}`;
       });
     }
     return iterator;
   }
 
-  formatForNext(line, i) {
+  /**
+   * Format NEXT iteration line.
+   * @param {string} line 
+   * @param {*} i 
+   * @returns {string}
+   */
+  formatForNext(line) {
     const forCounterCheck = /((NEXT)[\t\ ]+(\S+)|(NEXT))/gi;
     logger.log(`For-Next-start`);
-
-    let _this = this;
+  
     if (forCounterCheck.test(line)) {
       logger.log(`..."${line}"`);
       try {
-        return line.replace(forCounterCheck, function (match, p1, p2, p3) {
-          // logger.log('====>', match, p1, p2, p3);
-          if (p2 && p3) {
-            return _this.formatNextIteration(p2, p3);
-          } else {
-            return p1;
-          }
-        });
+        return line.replace(forCounterCheck, (match, p1, p2, p3) => p2 && p3 ? this.formatNextIteration(p2, p3) : p1);
       } catch (err) {
         logger.log('!ERROR:: ', err);
       }
@@ -140,21 +132,21 @@ module.exports = class CodeBlock {
     return line;
   }
 
+  /**
+   * Format next iteration line.
+   * @param {string} nextKeyword next keyword itself
+   * @param {string} counter iterator var from the statement
+   * @return {string}
+   */
   formatNextIteration(nextKeyword, counter) {
     nextKeyword = nextKeyword.trim();
     logger.log(`=> NEXT: "${nextKeyword}", counter: "${counter}"`);
-    if (this.capitalizeIfFor) {
-      nextKeyword = nextKeyword.toUpperCase();
-    } else {
-      nextKeyword = nextKeyword.toLowerCase();
-    }
-    // logger.log(`=> NEXT: "${nextKeyword}"`);
+  
+    nextKeyword = this.capitalizeIfFor ? nextKeyword.toUpperCase() : nextKeyword.toLowerCase();
+  
     if (typeof counter === 'string' && counter !== '') {
-      // TODO: finish this:
-      // let statement = this.formatStatement(condition);
       return `${nextKeyword} ${counter}`;
     } else {
-      // logger.log(`=> no counter`);
       return `${nextKeyword}`;
     }
   }
@@ -548,12 +540,9 @@ module.exports = class CodeBlock {
    * @param {number} inBlockLineIndentation extra indentation for current line
    * @return {string} indentation string (whitespaces)
    */
-  getIndentation(inBlockLineIndentation) {
-    // must be handled separately!
-    const inLineIndentation = typeof inBlockLineIndentation === 'number' ? inBlockLineIndentation : 0;
-    const nstLvl = this.nestLevel >= 0 ? this.nestLevel : 0; // because no block can start at minus column
-    // logger.log(`${this.nestLevel}, ${inLineIndentation}`);
-    const finalIndent = nstLvl + inLineIndentation >= 0 ? nstLvl + inLineIndentation : 0;
+  getIndentation(inBlockLineIndentation = 0) {
+    const nstLvl = Math.max(this.nestLevel, 0); // no block can start at minus column
+    const finalIndent = Math.max(nstLvl + inBlockLineIndentation, 0);
     return this.indentator.repeat(finalIndent);
   }
 
@@ -563,21 +552,17 @@ module.exports = class CodeBlock {
    */
   makeOneLiner() {
     const commentBreaker = /(\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->)/gi;
-    let parts = this.lines.split(commentBreaker);
-    let lines = [];
-    // logger.log(parts);
-
+  
     if (typeof this.lines === 'string') {
-      parts.forEach((part) => {
-
+      const parts = this.lines.split(commentBreaker);
+      const lines = parts.map((part) => {
         if (commentBreaker.test(part)) {
           logger.log('skip: ', part);
+          return part;
         } else {
-          let codeParts = part.split(this.delimeter);
-          part = codeParts.join(' ');
+          return part.split(this.delimeter).join(' ');
         }
-        lines.push(part);
-      })
+      });
       this.lines = lines.join(' ');
     } else {
       this.lines = this.lines.join(' ');
@@ -587,7 +572,6 @@ module.exports = class CodeBlock {
   // expects separated lines, returns integer with the change of indentation (nesting)
   getExtraOutputIndent() {
     const blockOpeners = /^(IF\s+(.*)\s+THEN|FOR\s+(.*)\s+DO)/i;
-    // const blockReOpeners = /(ELSEIF\s+(.*)\s+THEN|ELSE)/i; // not necessary - does not change the level
     const blockClosure = /(ENDIF|NEXT[\ \t]+\@\w+|NEXT)/i;
 
     let finalNestChange = 0;
@@ -598,16 +582,13 @@ module.exports = class CodeBlock {
         // to handle inner-blocks:
         if (blockOpeners.test(lineCopy)) {
           // opening block:
-          // logger.log(`>> ${lineCopy}`);
           finalNestChange += 1;
         } else if (blockClosure.test(lineCopy)) {
           // closing block:
-          // logger.log(`<< ${lineCopy}`);
           finalNestChange -= 1;
         }
       }
     }, this);
-    // logger.log(`block nest change: ` + finalNestChange);
     return finalNestChange;
   }
 
@@ -620,23 +601,17 @@ module.exports = class CodeBlock {
   }
 
   getMethodIndentation(line) {
-    // TODO: XXX
     logger.log(`getMethodIndentation(${line})`);
     let newLine = '';
-    if (line.startsWith(this.indentMarker)) {
-      // how many are there? Only from the beginning!!!
-      let i = 0;
-      while (line.startsWith(this.indentMarker) && i < 20) {
-        newLine += this.indentator; // method indent char
-        line = line.substring(this.indentMarker.length, line.length);
-        i++;
-      }
-      newLine += line;
-    } else {
-      newLine = line;
+    const indentMarkerLength = this.indentMarker.length;
+  
+    while (line.startsWith(this.indentMarker)) {
+      newLine += this.indentator;
+      line = line.substring(indentMarkerLength);
     }
-    logger.log(`getMethodIndentation() => ${newLine}`);
-    return newLine;
+  
+    logger.log(`getMethodIndentation() => ${newLine + line}`);
+    return newLine + line;
   }
 
   indentAmpBlockLines() {
@@ -713,26 +688,26 @@ module.exports = class CodeBlock {
     this.lines = lines.join(this.delimeter);
   }
 
+  /**
+   * Return lines from CodeBlock.
+   * @returns {string}
+   */
   returnAsLines() {
-    // logger.log(`=> isAmp: ${this.isAmp}, type: ${typeof this.lines}, isArray: ${Array.isArray(this.lines)}`);
     if (Array.isArray(this.lines)) {
       this.lines = this.lines.join(this.delimeter);
     }
-    // logger.log(`Block - isAmp: ${this.isAmp}, isOneLine: ${this.isOneliner}, isOutputAmp: ${this.isOutputAmp}`);
-    if (this.isAmp && !this.isOneliner) { // if AMPscript:
-      this.indentAmpBlockLines();
-    } else if (this.isOutputAmp || this.isOneliner) { // in case of Output AMPscript %%= =%%:
-      // this is for one-liner output AMPscript:
-      // logger.log(`...oneLineIndent. ${typeof this.lines}, ${this.nestLevel}`);
-      this.lines = this.lines.trim();
-      this.lines = this.getIndentation() + this.lines;
-    }
-    // this.lines = `${this.nestModifier}/${this.nestLevel} => ${this.lines}`;
-
+  
     if (this.isAmp) {
+      if (!this.isOneliner) {
+        this.indentAmpBlockLines();
+      } else {
+        this.lines = this.getIndentation() + this.lines.trim();
+      }
       this.lines = this.replacer.showVars(this.lines);
+    } else if (this.isOutputAmp || this.isOneliner) {
+      this.lines = this.getIndentation() + this.lines.trim();
     }
-
+  
     return this.lines;
   }
 }

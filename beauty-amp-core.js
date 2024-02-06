@@ -35,38 +35,25 @@ let logger = new Logger();
 
 module.exports = {
 
-  cutBlanksAtStartEnd(lines, lineDelimeter) {
-    const delimeter = lineDelimeter !== undefined ? lineDelimeter : '\n';
-    let text = lines.join(delimeter);
-
-    text = text.trim();
-
-    const newLines = text.split(delimeter);
-    return newLines;
+  cutBlanksAtStartEnd(lines, delimeter = '\n') {
+    return lines.join(delimeter).trim().split(delimeter);
   },
 
-  getCodeBlocks(lines, lineDelimeter, settings, editorSetup) {
-    const delimeter = lineDelimeter !== undefined ? lineDelimeter : '\n';
+  getCodeBlocks(lines, delimeter = '\n', settings, editorSetup) {
     const fullText = lines.join(delimeter);
-    let blocks = [];
-
     const blockRegEx = /%%\[.*?\]%%/gis;
-
-    // get matches as code blocks:
-    let ampBlocks = fullText.match(blockRegEx);
-    // logger.log('AMP blocks: ', ampBlocks);
-
-    // split by block regex:
-    let htmlBlocks = fullText.split(blockRegEx);
-    // logger.log('HTML blocks: ', htmlBlocks);
-
-    // merge both arrays into one final using the CodeBlocks:
-    for (let i = 0; i < htmlBlocks.length - 1; i++) {
-      blocks.push(new CodeBlock(htmlBlocks[i].trim(), false, delimeter, settings, editorSetup, logger));
-      blocks.push(new CodeBlock(ampBlocks[i].trim(), true, delimeter, settings, editorSetup, logger));
-    }
-    blocks.push(new CodeBlock(htmlBlocks[htmlBlocks.length - 1].trim(), false, delimeter, settings, editorSetup, logger));
-
+  
+    const ampBlocks = fullText.match(blockRegEx) || [];
+    const htmlBlocks = fullText.split(blockRegEx);
+  
+    const blocks = htmlBlocks.flatMap((htmlBlock, i) => {
+      const blocks = [new CodeBlock(htmlBlock.trim(), false, delimeter, settings, editorSetup, logger)];
+      if (ampBlocks[i]) {
+        blocks.push(new CodeBlock(ampBlocks[i].trim(), true, delimeter, settings, editorSetup, logger));
+      }
+      return blocks;
+    });
+  
     return blocks;
   },
 
@@ -166,7 +153,6 @@ module.exports = {
       throw "Unsupported 'lines' data type.";
     }
 
-    // run Prettier on HTML:
     if (includeHtml) {
       lines = await this.processHtml(lines);
     }
@@ -253,12 +239,10 @@ async function prettifyHtml(code) {
 }
 
 function lookForSetupFile() {
-  try {
-    const setupPath = path.resolve(process.cwd(), './.beautyamp.json');
-
-    let rawdata = fs.readFileSync(setupPath);
+  const setupPath = path.resolve(process.cwd(), './.beautyamp.json');
+  if (fs.existsSync(setupPath)) {
+    const rawdata = fs.readFileSync(setupPath);
     return JSON.parse(rawdata);
-  } catch(err) {
-    return false;
   }
+  return false;
 }
