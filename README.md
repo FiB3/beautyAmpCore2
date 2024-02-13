@@ -61,6 +61,7 @@ console.log(result); // returns code as a string
 ## Setup
 
 You can set the extension either in code or using a file.
+File provided setup overrides setup from `setup()` function call. 
 
 ### In code:
 ``` javascript

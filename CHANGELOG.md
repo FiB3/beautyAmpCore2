@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.4.6] - 2024-02-06
+### Fixed
+- Formatting getting broken by variables, strings, etc. that collided with keywords. E.g.: `SET @myNextVar = "my set variable".
+
+### Changed
+- All variables are now "cased" (upper/lower case) based on the first occurrence.
+- Refactors, bug fixes, improved docs, more unit tests.
+
 ## [0.4.5] - 2023-12-07
 
 ### Changed
