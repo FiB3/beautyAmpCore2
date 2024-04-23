@@ -8,7 +8,7 @@
   },
   "main": "beauty-amp-core.js",
   "scripts": {
-    "test": "node node_modules/.bin/jest ./tests/"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest ./tests/"
   },
   "keywords": [],
   "dependencies": {
@@ -22,6 +22,6 @@
   },
   "homepage": "https://fib3.vercel.app/",
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^30.0.0-alpha.1"
   }
 }
