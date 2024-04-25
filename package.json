@@ -6,22 +6,34 @@
   "author": {
     "name": "filipbostik"
   },
-  "main": "beauty-amp-core.js",
-  "scripts": {
-    "test": "node --experimental-vm-modules node_modules/.bin/jest ./tests/"
-  },
   "keywords": [],
-  "dependencies": {
-    "lodash": "^4.17.21",
-    "prettier": "^2.8.8"
-  },
   "license": "BSD-4-CLAUSE",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/FiB3/beautyAmpCore2.git"
   },
   "homepage": "https://fib3.vercel.app/",
+
+  "main": "dist/beauty-amp-core.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "cross-env NODE_ENV=development node --experimental-vm-modules node_modules/.bin/jest ./tests/",
+    "test:prod": "cross-env NODE_ENV=production node --experimental-vm-modules node_modules/.bin/jest ./tests/",
+    "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",
+    "build:pack": "cross-env NODE_ENV=production webpack --config webpack.config.js; npm pack",
+    "build:publish": "cross-env NODE_ENV=production webpack --config webpack.config.js; npm publish"
+  },
+  "dependencies": {
+  },
   "devDependencies": {
-    "jest": "^30.0.0-alpha.1"
+    "lodash": "^4.17.21",
+    "prettier": "^3.2.5",
+
+    "cross-env": "^7.0.3",
+    "jest": "^29.0.0",
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4"
   }
 }

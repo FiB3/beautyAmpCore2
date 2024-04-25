@@ -5,6 +5,7 @@ jsconfig.json
 .eslintrc.json
 
 .vscode/settings.json
+dist/**
 
 *.amp
 *.txt
@@ -16,3 +17,5 @@ coverage
 playground.js
 
 TODO.md
+
+*.tgz

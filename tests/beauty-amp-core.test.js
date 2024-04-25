@@ -1,4 +1,6 @@
-const beautifier = require('../beauty-amp-core');
+const beautifier = require(process.env.NODE_ENV === 'production' ? '../dist/beauty-amp-core.js' : '../beauty-amp-core');
+
+console.log(`Testing for: ${process.env.NODE_ENV} (production? ${process.env.NODE_ENV === 'production'}).`);
 
 beforeEach(() => {
     beautifier.setup(undefined, undefined, {
@@ -397,4 +399,66 @@ test("Next-in-variable-fix", async () => {
     const res = await beautifier.beautify(testCase, false);
     expect(!Array.isArray(res)).toBeTruthy();
     expect(res).toStrictEqual(testRes);
+});
+
+test("Test with HTML, CSS and Javascript.", async () => {
+    let testCase = `<head>
+    <style>body{ background-color: #f4f4f4;}
+    </style>
+    </head>
+    <div id="test"><p>Hello</p>
+    <div class="test2">
+    <p>Hello2</p>
+    </div></div>
+    <script runat="server">Platform.Load("core", "1.1.1");
+    /**
+     * X...
+     */
+    try {
+        Write('Hello World!');
+    
+        // var x;
+        var x = {
+            "a": 42,
+            b: 3.14
+        };
+        /* TEST */
+    } catch (err) {
+        Write("Error: " + err + ". Message: " + err.message);
+        }
+    </script>
+`;
+
+const testRes = `<head>
+    <style>
+        body{ background-color: #f4f4f4;}
+    </style>
+</head>
+<div id="test">
+    <p>Hello</p>
+    <div class="test2">
+        <p>Hello2</p>
+    </div>
+</div>
+<script runat="server">
+    Platform.Load("core", "1.1.1");
+    /**
+     * X...
+     */
+    try {
+        Write("Hello World!");
+
+        // var x;
+        var x = {
+            a: 42,
+            b: 3.14
+        };
+        /* TEST */
+    } catch (err) {
+        Write("Error: " + err + ". Message: " + err.message);
+    }
+</script>`;
+
+const res = await beautifier.beautify(testCase);
+expect(res).toBe(testRes);
 });

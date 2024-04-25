@@ -1,7 +1,12 @@
 const path = require('path');
 const fs = require('fs');
 
-const prettier = require('prettier');
+const prettier = require("prettier/standalone");
+const htmlParser = require("prettier/parser-html");
+const babelParser = require("prettier/parser-babel");
+const estreeParser = require("prettier/plugins/estree");
+// const cssParser = require("prettier/parser-postcss");
+
 const _ = require('lodash');
 const CodeBlock = require('./src/codeBlock');
 
@@ -22,6 +27,7 @@ let setup = {
   },
   htmlOptions: {
     parser: 'html',
+    plugins: [htmlParser],
     useTabs: false,
     tabWidth: 4,
     // other settings:
@@ -233,7 +239,26 @@ async function prettifyHtml(code) {
   } else if (typeof(code) !== 'string') {
     throw "Unsupported 'code' data type for prettier.";
   }
+
   let x = await prettier.format(code, setup.htmlOptions);
+  
+  const scriptPattern = /<script[^>]*>([\s\S]*?)<\/script>/g;
+  let matches = Array.from(x.matchAll(scriptPattern));
+  for (let match of matches) {
+    let formattedScript = await prettier.format(match[1], {
+      ...setup.htmlOptions,
+      parser: 'babel',
+      plugins: [babelParser, estreeParser]
+    });
+
+    formattedScript = formattedScript.split('\n').map(line => {
+      return line == '' ? line : `    ${line}`;
+    }).join('\n');
+    formattedScript = `\n` + formattedScript;
+
+    x = x.replace(match[0], match[0].replace(match[1], formattedScript));
+  }
+
   logger.log(`prettifyHtml`, typeof(x));
   return x;
 }

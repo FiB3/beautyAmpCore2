@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.4.7] - 2024-04-25
+
+### Changed
+- Bundled the module.
+- Changed prettier to v3, but switched to standalone version due to issues with webpack and jest.
+
 ## [0.4.6] - 2024-02-06
 ### Fixed
 - Formatting getting broken by variables, strings, etc. that collided with keywords. E.g.: `SET @myNextVar = "my set variable".
