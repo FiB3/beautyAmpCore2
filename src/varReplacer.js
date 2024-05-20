@@ -2,10 +2,13 @@ const _ = require('lodash');
 
 /**
  * Handles hiding any AMPscript variables from the code - to avoid any conflicts with keywords.
+ * @param {Object} loggerInstance - instance of the logger.
+ * @param {Boolean} avoidJs - if true, the temporary variable names will not start with `@`, but with `___` (to avoid conflicts with JS decorators).
  */
 module.exports = class VarReplacer {
-	constructor(loggerInstance = { log: () => {} }) {
+	constructor(loggerInstance = { log: () => {} }, avoidJs = false) {
 		this.logger = loggerInstance;
+		this.avoidJs = avoidJs;
 
 		this.varGenerator = this.getNextVarName();
 		// object with simplified names as values and the original variable names as values.
@@ -24,12 +27,6 @@ module.exports = class VarReplacer {
 		script = this.replaceSystemStrings(script);
 
 		// run through all keys in replacedVarsView and change all in script to use keyToTempVar() expression:
-		// for (let key in this.replacedVarsView) {
-		// 	let value = this.keyToTempVar(key);
-		// 	let regex = new RegExp(_.escapeRegExp(key), 'g');
-		// 	script = script.replace(regex, value);
-		// }
-
 		return this._finalizeHiding(script);
 	}
 
@@ -150,8 +147,13 @@ module.exports = class VarReplacer {
 		return script;
 	}
 
+	/**
+	 * Convert a simplified variable name to a temporary variable name.
+	 * @param {String} input simplified variable name.
+	 * @returns {String} temporary variable name - format: `@var`.
+	 */
 	keyToTempVar(input) {
-		let output = input.replace(/#(\w\d)#/g, "@$1");
+		let output = input.replace(/#(\w\d)#/g, this.avoidJs ? "___$1" : "@$1");
 		return output;
 	}
 

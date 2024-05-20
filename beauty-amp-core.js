@@ -20,7 +20,8 @@ let setup = {
     capitalizeIfFor: true,
     capitalizeSet: true,
     capitalizeVar: true,
-    maxParametersPerLine: 4
+    maxParametersPerLine: 4,
+    mustacheTags: ['{{', `}}`]
   },
   editor: {
     insertSpaces: true,
@@ -193,7 +194,7 @@ module.exports = {
    *    {Boolean = true} loggerOn - enable the logger
    */
   setup(
-    ampscript = { capitalizeAndOrNot: true, capitalizeIfFor: true, capitalizeSet: true, capitalizeVar: true, maxParametersPerLine: true },
+    ampscript = { capitalizeAndOrNot: true, capitalizeIfFor: true, capitalizeSet: true, capitalizeVar: true, maxParametersPerLine: true, mustacheTags: ['{{', `}}`] },
     editor = { insertSpaces: true, tabSize: 4 },
     logs
   ) {
@@ -215,6 +216,7 @@ module.exports = {
       setup.ampscript.capitalizeSet = amp.capitalizeSet === false ? false : true;
       setup.ampscript.capitalizeVar = amp.capitalizeVar === false ? false : true;
       setup.ampscript.maxParametersPerLine = _.isInteger(amp.maxParametersPerLine) ? amp.maxParametersPerLine : 4;
+      setup.ampscript.mustacheTags = Array.isArray(amp.mustacheTags) ? amp.mustacheTags : ['{{', `}}`];
     }
 
     if (edit) {
@@ -241,8 +243,10 @@ async function prettifyHtml(code) {
     throw "Unsupported 'code' data type for prettier.";
   }
   // remove stuff that shouldn't be formatted:
-  const replacer = new VarReplacer(logger);
+  const replacer = new VarReplacer(logger, true);
   code = replacer._replaceStuff(code, /%%=.*?=%%/gmi);
+  const regexToUse = new RegExp(`${setup.ampscript.mustacheTags[0]}.*?${setup.ampscript.mustacheTags[1]}`, "gmi");
+  code = replacer._replaceStuff(code, regexToUse);
   code = replacer._finalizeHiding(code);
 
   // format HTML:
