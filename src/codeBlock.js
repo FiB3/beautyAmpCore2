@@ -393,6 +393,9 @@ module.exports = class CodeBlock {
     }
   }
 
+  /**
+   * Checks for the `%%=...=%%` pattern.
+   */
   checkForOutputAmpBlock() {
     const outputAmpCheck = /^\s*(%%=.*=%%)\s*$/gi;
     // logger.log('block:', this.lines);

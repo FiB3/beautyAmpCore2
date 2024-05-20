@@ -19,8 +19,8 @@
     "dist"
   ],
   "scripts": {
-    "test": "cross-env NODE_ENV=development node --experimental-vm-modules node_modules/.bin/jest ./tests/",
-    "test:prod": "cross-env NODE_ENV=production node --experimental-vm-modules node_modules/.bin/jest ./tests/",
+    "test": "cross-env NODE_ENV=development node node_modules/.bin/jest ./tests/",
+    "test:prod": "cross-env NODE_ENV=production node node_modules/.bin/jest ./tests/",
     "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",
     "build:pack": "cross-env NODE_ENV=production webpack --config webpack.config.js; npm pack",
     "build:publish": "cross-env NODE_ENV=production webpack --config webpack.config.js; npm publish"

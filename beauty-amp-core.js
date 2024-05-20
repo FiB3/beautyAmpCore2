@@ -9,6 +9,7 @@ const estreeParser = require("prettier/plugins/estree");
 
 const _ = require('lodash');
 const CodeBlock = require('./src/codeBlock');
+const VarReplacer = require('./src/varReplacer');
 
 const Logger = require("./src/logger");
 
@@ -239,7 +240,12 @@ async function prettifyHtml(code) {
   } else if (typeof(code) !== 'string') {
     throw "Unsupported 'code' data type for prettier.";
   }
+  // remove stuff that shouldn't be formatted:
+  const replacer = new VarReplacer(logger);
+  code = replacer._replaceStuff(code, /%%=.*?=%%/gmi);
+  code = replacer._finalizeHiding(code);
 
+  // format HTML:
   let x = await prettier.format(code, setup.htmlOptions);
   
   const scriptPattern = /<script[^>]*>([\s\S]*?)<\/script>/g;
@@ -260,6 +266,9 @@ async function prettifyHtml(code) {
   }
 
   logger.log(`prettifyHtml`, typeof(x));
+  // replace back the hidden stuff:
+  x = replacer.showVars(x);
+  // return the formatted code:
   return x;
 }
 

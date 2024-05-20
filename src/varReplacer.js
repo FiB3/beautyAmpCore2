@@ -24,13 +24,13 @@ module.exports = class VarReplacer {
 		script = this.replaceSystemStrings(script);
 
 		// run through all keys in replacedVarsView and change all in script to use keyToTempVar() expression:
-		for (let key in this.replacedVarsView) {
-			let value = this.keyToTempVar(key);
-			let regex = new RegExp(_.escapeRegExp(key), 'g');
-			script = script.replace(regex, value);
-		}
+		// for (let key in this.replacedVarsView) {
+		// 	let value = this.keyToTempVar(key);
+		// 	let regex = new RegExp(_.escapeRegExp(key), 'g');
+		// 	script = script.replace(regex, value);
+		// }
 
-		return script;
+		return this._finalizeHiding(script);
 	}
 
 	/**
@@ -132,6 +132,22 @@ module.exports = class VarReplacer {
 		}
 		this.logger.log(`>>>>>>>>>>\n`, modifiedScriptText, `\n<<<<<<<<<<<<`);
 		return modifiedScriptText;
+	}
+
+	/**
+	 * Finalize hiding process - replace all variables in the script text with simplified var names.
+	 * @param {String} scriptText text of your code.
+	 * @return {String} text with hidden variables.
+	 */
+	_finalizeHiding(scriptText) {
+		let script = scriptText;
+		// run through all keys in replacedVarsView and change all in script to use keyToTempVar() expression:
+		for (let key in this.replacedVarsView) {
+			let value = this.keyToTempVar(key);
+			let regex = new RegExp(_.escapeRegExp(key), 'g');
+			script = script.replace(regex, value);
+		}
+		return script;
 	}
 
 	keyToTempVar(input) {

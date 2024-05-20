@@ -462,3 +462,15 @@ const testRes = `<head>
 const res = await beautifier.beautify(testCase);
 expect(res).toBe(testRes);
 });
+
+
+test("Test Broken Output-AMPscripts.", async () => {
+    let testCase = `<h1>
+    %%=ContentBlockByName("Content Builder\Release X - BUILD\Content Blocks Library\NEW MyCompany\\03. Header and banner\Referred content block\XYZ_ENV_Header_red")=%%
+    </h1>`;
+
+const testRes = `<h1>%%=ContentBlockByName("Content BuilderRelease X - BUILDContent Blocks LibraryNEW MyCompany\03. Header and bannerReferred content blockXYZ_ENV_Header_red")=%%</h1>`;
+
+const res = await beautifier.beautify(testCase);
+expect(res).toBe(testRes);
+});
