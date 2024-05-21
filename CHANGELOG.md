@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.4.9] - 2024-05-21
+
+### Changed
+- Add support for Mustache Templating strings.
+- New Setup AMPscript option which allows to set Mustach Templating tags used.
+- Refactors.
+
+### Fixed
+- Broken formatting on Output/Print AMPscript (the %%==%% syntax).
+
 ## [0.4.7] - 2024-04-25
 
 ### Changed
