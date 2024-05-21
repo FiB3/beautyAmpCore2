@@ -1,6 +1,38 @@
 const _ = require('lodash');
 
 module.exports = {
+  /**
+   * Format SET assignments.
+   */
+  formatAssignment(line, capitalizeSet = true) {
+    const assignmentRegEx = /set[\ \t]+(\@\w+)[\ \t]*=[\ \t]*([\S\ \t]+)/gi;
+    let setKeyword = capitalizeSet ? 'SET' : 'set';
+
+    if (assignmentRegEx.test(line)) {
+      return line.replace(assignmentRegEx, setKeyword + ' $1 = $2');
+    }
+    return line;
+  },
+
+  /**
+   * Format variable declaration line.
+   * @param {string} line 
+   * @param {*} i placeholder
+   * @returns 
+   */
+  formatVarDeclaration(line, capitalizeVar = true) {
+    const declarationCheck = /^VAR\s+(.*)/i;
+  
+    const varKeyword = capitalizeVar ? 'VAR' : 'var';
+  
+    if (declarationCheck.test(line)) {
+      const paramsStr = line.replace(declarationCheck, '$1');
+      const vars = paramsStr.split(',');
+      const params = vars.map(param => param.trim());
+      return `${varKeyword} ${params.join(', ')}`;
+    }
+    return line;
+  },
 
   /**
    * Splits function parameters. All nested functions and strings including quotes are kept untouched.

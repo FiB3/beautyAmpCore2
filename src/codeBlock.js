@@ -45,10 +45,10 @@ module.exports = class CodeBlock {
         const codeLines = typeof this.lines === 'string' ? [this.lines] : this.lines;
   
         this.lines = codeLines.map((line, i) => {
-          line = this.formatAssignment(line);
-          line = this.formatVarDeclaration(line, i);
+          line = formatters.formatAssignment(line, this.capitalizeSet);
+          line = formatters.formatVarDeclaration(line, this.capitalizeVar);
+          
           line = this.formatElseAndEndifLine(line, i);
-          logger.log(`formatElseAndEndifLine() => `, line);
           line = this.formatForDeclaration(line, i);
           line = this.formatForNext(line, i);
           line = this.formatMethodLine(line, i);
@@ -149,44 +149,6 @@ module.exports = class CodeBlock {
     } else {
       return `${nextKeyword}`;
     }
-  }
-
-  /**
-   * Format variable declaration line.
-   * @param {string} line 
-   * @param {*} i placeholder
-   * @returns 
-   */
-  formatVarDeclaration(line, i) {
-    const declarationCheck = /^VAR\s+(.*)/i;
-  
-    const varKeyword = this.capitalizeVar ? 'VAR' : 'var';
-  
-    if (declarationCheck.test(line)) {
-      logger.log(`VAR: "${line}"`);
-      const paramsStr = line.replace(declarationCheck, '$1');
-      const vars = paramsStr.split(',');
-      const params = vars.map(param => param.trim());
-      return `${varKeyword} ${params.join(', ')}`;
-    }
-    return line;
-  }
-
-  // only for multiline blocks 
-  formatAssignment(line) {
-    // const lines = typeof this.lines === 'string' ? [this.lines] : this.lines;
-    const assignmentRegEx = /set[\ \t]+(\@\w+)[\ \t]*=[\ \t]*([\S\ \t]+)/gi;
-    // logger.log('typeof: ' + typeof this.lines, Array.isArray(this.lines));
-    let setKeyword = 'set';
-    if (this.capitalizeSet) {
-      setKeyword = 'SET';
-    }
-
-    if (assignmentRegEx.test(line)) {
-      // logger.log('Matched assignment!');
-      return line.replace(assignmentRegEx, setKeyword + ' $1 = $2');
-    }
-    return line;
   }
 
   formatMethodLine(line, i) {
@@ -510,14 +472,12 @@ module.exports = class CodeBlock {
           try {
             lineChanged = breakRegEx.test(lineChanges);
           } catch (err) {
-            console.log(`Error:`, err);
-            console.log(`Breaker ${i}/${breakers.length}:`, breakers[i]);
+            logger.error(`Error:`, err);
+            logger.info(`Breaker ${i}/${breakers.length}:`, breakers[i]);
           }
           
           if (lineChanged) { logger.log("--->", breakers[i].name, ' ==> ', lineChanged); }
           while (lineChanged && counter++ < 2) {
-            // if (breakers[i].name === 'for') { logger.log(`==> `, lineChanges.match(breakRegEx)); } 
-            // if (breakers[i].name === 'methods-after-value') { logger.log(`==> `, lineChanges.match(breakRegEx)); }
             lineChanges = lineChanges.replace(breakRegEx, replaceWith);
           }
         }
@@ -672,8 +632,6 @@ module.exports = class CodeBlock {
             inMultilineComment = false;
           }
         }
-        // line = `||${lineCopy}||`;
-        // lineCopy = this.getIndentation(currentIndent) + lineCopy;
         lineCopy = this.getIndentation(currentIndent) + this.getMethodIndentation(lineCopy);
 
       }
